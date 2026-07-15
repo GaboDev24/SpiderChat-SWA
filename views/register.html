@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SpiderWeb Chat — Registro</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/css/tactical.css">
+  <script src="/theme.js"></script>
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+<body class="tac-page">
+  <div class="sw-scanlines"></div>
+  <div class="noise-overlay"></div>
+  
+  <div class="hud-corner hud-tl"><span class="hud-line h"></span><span class="hud-line v"></span></div>
+  <div class="hud-corner hud-tr"><span class="hud-line h"></span><span class="hud-line v"></span></div>
+  <div class="hud-corner hud-bl"><span class="hud-line h"></span><span class="hud-line v"></span></div>
+  <div class="hud-corner hud-br"><span class="hud-line h"></span><span class="hud-line v"></span></div>
+
+  <div class="sw-auth-wrap">
+    <div class="sw-auth-panel">
+      <div class="sw-auth-header">
+        <div class="sw-auth-dot r"></div>
+        <div class="sw-auth-dot y"></div>
+        <div class="sw-auth-dot g"></div>
+        <div class="sw-auth-title">SPIDERWEB :: ENROLL_SYS</div>
+      </div>
+      
+      <div class="sw-auth-body">
+        <div class="sw-auth-logo">
+          <img src="/img/logo blanco.png" data-logo-dark="/img/logo blanco.png" data-logo-light="/img/logo negro.png" data-logo-swap alt="SpiderWeb Logo">
+          <div class="sw-auth-logo-text">SpiderWeb <span class="red-accent">Registro</span></div>
+        </div>
+        
+        <p class="sw-auth-subtitle">Únete a la red táctica.</p>
+        
+        <div id="errorMsg" class="sw-alert" style="display: none;"></div>
+
+        <form id="registerForm" style="margin-top: 1.5rem;">
+          <div class="form-group" style="margin-bottom: 1.25rem;">
+            <label class="sw-label" style="display:block; margin-bottom: 0.5rem;">Nombre Completo</label>
+            <input type="text" id="name" class="sw-input" required autocomplete="name" placeholder="John Doe">
+          </div>
+
+          <div class="form-group" style="margin-bottom: 1.25rem;">
+            <label class="sw-label" style="display:block; margin-bottom: 0.5rem;">Email (@gmail.com)</label>
+            <input type="email" id="email" class="sw-input" required autocomplete="email" placeholder="usuario@gmail.com">
+          </div>
+          
+          <div class="form-group" style="margin-bottom: 2rem;">
+            <label class="sw-label" style="display:block; margin-bottom: 0.5rem;">Contraseña (Min 6 chars)</label>
+            <input type="password" id="password" class="sw-input" required autocomplete="new-password" placeholder="••••••••">
+          </div>
+
+          <button type="submit" class="sw-btn sw-btn--primary sw-btn--full" id="submitBtn">
+            <i class="fa-solid fa-user-plus"></i> CREAR CUENTA
+          </button>
+        </form>
+        
+        <div class="sw-divider">
+          <span class="sw-divider-text">¿YA TIENES ACCESO?</span>
+        </div>
+        
+        <div style="text-align: center;">
+          <a href="/login" class="sw-btn sw-btn--ghost sw-btn--full" style="justify-content: center;">
+            VOLVER AL LOGIN
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('registerForm');
+    const errorMsg = document.getElementById('errorMsg');
+    const submitBtn = document.getElementById('submitBtn');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      errorMsg.style.display = 'none';
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> PROCESANDO...';
+      
+      const name = document.getElementById('name').value;
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      try {
+        const res = await fetch('/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, password })
+        });
+        
+        const data = await res.json();
+        
+        if (!res.ok) {
+          throw new Error(data.error || 'Error al registrar cuenta');
+        }
+        
+        window.location.href = '/chat';
+      } catch (err) {
+        errorMsg.style.display = 'block';
+        errorMsg.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> ${err.message}`;
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fa-solid fa-user-plus"></i> CREAR CUENTA';
+      }
+    });
+  </script>
+</body>
+</html>

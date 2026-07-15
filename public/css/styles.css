@@ -1,0 +1,129 @@
+/**
+ * SpiderChat — Design System Base
+ * Basado en DESIGN.md de SpiderWebARG
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Share+Tech+Mono&family=Inter:wght@300;400;500;600&display=swap');
+
+/* ── Reset ─────────────────────────────────────────────────────────────── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+/* ── Variables ─────────────────────────────────────────────────────────── */
+:root {
+  /* Fuentes */
+  --font-head: 'Barlow Condensed', sans-serif;
+  --font-mono: 'Share Tech Mono', monospace;
+  --font-body: 'Inter', sans-serif;
+
+  /* Colores base */
+  --red:       #A30000;
+  --red-dark:  #6B0000;
+  --red-glow:  rgba(163, 0, 0, 0.35);
+  --black:     #000000;
+  --off-white: #F5F5F5;
+  --gray-dark: #0a0a0a;
+  --steel:     #1a1a1a;
+  --steel-mid: #141414;
+
+  /* Fondos */
+  --bg-primary:    #000000;
+  --bg-secondary:  #0a0a0a;
+  --bg-card:       rgba(18, 6, 6, 0.85);
+  --bg-card-hover: rgba(24, 8, 8, 0.95);
+  --bg-glass:      rgba(255, 255, 255, 0.02);
+  --bg-input:      rgba(163, 0, 0, 0.06);
+
+  /* Texto */
+  --text-primary:   #F5F5F5;
+  --text-secondary: rgba(245, 245, 245, 0.55);
+  --text-muted:     rgba(245, 245, 245, 0.25);
+
+  /* Bordes */
+  --border:       rgba(163, 0, 0, 0.2);
+  --border-light: rgba(163, 0, 0, 0.08);
+  --border-glow:  rgba(163, 0, 0, 0.45);
+
+  /* Sombras */
+  --shadow-sm:   0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-md:   0 4px 20px rgba(0, 0, 0, 0.5);
+  --shadow-lg:   0 8px 40px rgba(0, 0, 0, 0.6);
+  --shadow-red:  0 0 30px rgba(163, 0, 0, 0.15);
+
+  /* Variables RGB para uso con rgba() */
+  --bg-primary-rgb:   0, 0, 0;
+  --text-primary-rgb: 245, 245, 245;
+
+  /* Espaciado */
+  --radius-sm: 0px;
+  --sidebar-width: 280px;
+  --header-height: 60px;
+}
+
+/* ── Modo claro ─────────────────────────────────────────────────────────── */
+[data-theme="light"] {
+  --black:     #f4f4f4;
+  --off-white: #121212;
+  --gray-dark: #ffffff;
+  --steel:     #e0e0e0;
+  --steel-mid: #ebebeb;
+
+  --bg-primary:    #f4f4f4;
+  --bg-secondary:  #ffffff;
+  --bg-card:       rgba(255, 255, 255, 0.95);
+  --bg-card-hover: #ffffff;
+  --bg-glass:      rgba(0, 0, 0, 0.03);
+  --bg-input:      rgba(163, 0, 0, 0.04);
+
+  --text-primary:   #121212;
+  --text-secondary: rgba(18, 18, 18, 0.6);
+  --text-muted:     rgba(18, 18, 18, 0.35);
+
+  --border:       rgba(163, 0, 0, 0.15);
+  --border-light: rgba(163, 0, 0, 0.06);
+  --border-glow:  rgba(163, 0, 0, 0.35);
+
+  --bg-primary-rgb:   244, 244, 244;
+  --text-primary-rgb: 18, 18, 18;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* ── Scrollbar personalizada ─────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: var(--bg-secondary); }
+::-webkit-scrollbar-thumb { background: var(--red-dark); }
+::-webkit-scrollbar-thumb:hover { background: var(--red); }
+
+/* ── Animaciones ─────────────────────────────────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.4; transform: scale(0.7); }
+}
+@keyframes typing {
+  0%, 80%, 100% { transform: scale(0); opacity: 0; }
+  40%           { transform: scale(1); opacity: 1; }
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes scanline {
+  0%   { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}

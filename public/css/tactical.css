@@ -1,0 +1,231 @@
+/**
+ * SpiderChat — Sistema Tactico
+ * Componentes de autenticacion, login, botones y elementos tactiles
+ */
+
+/* ── Paginas de autenticacion ─────────────────────────────────────────── */
+
+.tac-page {
+  background: var(--black);
+  color: var(--off-white);
+}
+
+/* Overlay de scanlines */
+.sw-scanlines {
+  position: fixed; inset: 0; z-index: 9990; pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg, transparent, transparent 2px,
+    rgba(var(--bg-primary-rgb), 0.04) 2px,
+    rgba(var(--bg-primary-rgb), 0.04) 4px
+  );
+}
+
+/* Efecto de ruido */
+.noise-overlay {
+  position: fixed; inset: 0; z-index: 9989; pointer-events: none;
+  opacity: 0.02;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+}
+
+/* ── Navbar tactica ─────────────────────────────────────────────────────── */
+
+.sw-nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  border-bottom: 1px solid transparent;
+  transition: background 0.3s, border-color 0.3s;
+}
+.sw-nav.scrolled {
+  background: rgba(var(--bg-primary-rgb), 0.95);
+  border-color: var(--border);
+  backdrop-filter: blur(14px);
+}
+.sw-nav__inner {
+  max-width: 1280px; margin: 0 auto;
+  padding: 0 clamp(1rem, 4vw, 2.5rem);
+  display: flex; align-items: center; justify-content: space-between; height: var(--header-height);
+}
+.sw-nav__brand {
+  display: flex; align-items: center; gap: 0.5rem;
+  text-decoration: none;
+}
+.sw-nav__logo { height: 32px; object-fit: contain; }
+
+.sw-nav__brand-text {
+  font-family: var(--font-head);
+  font-size: 1.4rem; font-weight: 900;
+  text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--off-white);
+}
+.sw-nav__brand-text .red-accent { color: var(--red); }
+
+/* ── Panel de autenticacion ─────────────────────────────────────────────── */
+
+.sw-auth-wrap {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 100vh; padding: 5rem 1rem 2rem;
+  position: relative; z-index: 1;
+}
+
+.sw-auth-panel {
+  width: 100%; max-width: 440px;
+  border: 1px solid var(--border);
+  background: var(--bg-secondary);
+  clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px));
+  overflow: hidden;
+  animation: slideUp 0.4s ease;
+}
+
+.sw-auth-header {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: rgba(163, 0, 0, 0.06);
+  border-bottom: 1px solid var(--border);
+}
+.sw-auth-dot { width: 9px; height: 9px; border-radius: 50%; }
+.sw-auth-dot.r { background: #ff5f57; }
+.sw-auth-dot.y { background: #febc2e; }
+.sw-auth-dot.g { background: #28c840; }
+.sw-auth-title {
+  font-family: var(--font-mono);
+  font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--text-secondary); margin-left: 0.5rem;
+}
+
+.sw-auth-body { padding: 2.5rem 2rem; }
+
+.sw-auth-logo { text-align: center; margin-bottom: 2rem; }
+.sw-auth-logo img { height: 52px; object-fit: contain; }
+.sw-auth-logo-text {
+  font-family: var(--font-head);
+  font-size: 2rem; font-weight: 900; text-transform: uppercase;
+  letter-spacing: 0.1em; color: var(--off-white);
+  margin-top: 0.5rem;
+}
+.sw-auth-logo-text .red-accent { color: var(--red); }
+
+.sw-auth-subtitle {
+  font-family: var(--font-mono);
+  font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--text-secondary); text-align: center;
+  margin-bottom: 2.5rem; margin-top: -1rem;
+}
+
+/* ── Botones ─────────────────────────────────────────────────────────────── */
+
+.sw-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 0.78rem; letter-spacing: 0.1em; text-transform: uppercase;
+  border: none; cursor: pointer; padding: 0.75rem 1.6rem;
+  clip-path: polygon(0 0, calc(100% - 7px) 0, 100% 7px, 100% 100%, 7px 100%, 0 calc(100% - 7px));
+  transition: all 0.2s ease; line-height: 1; text-decoration: none; width: auto;
+}
+.sw-btn--full { width: 100%; }
+.sw-btn--primary { background: var(--red); color: var(--off-white); }
+.sw-btn--primary:hover { background: #c40000; box-shadow: 0 0 20px var(--red-glow); }
+.sw-btn--ghost { background: transparent; color: var(--text-secondary); border: 1px solid var(--border); }
+.sw-btn--ghost:hover { background: rgba(163, 0, 0, 0.08); border-color: var(--red); color: var(--red); box-shadow: 0 0 12px var(--red-glow); }
+.sw-btn--google {
+  background: var(--steel); color: var(--off-white);
+  border: 1px solid var(--border);
+  display: flex; align-items: center; gap: 0.75rem;
+}
+.sw-btn--google:hover { background: #222; border-color: var(--red); box-shadow: 0 0 16px var(--red-glow); }
+
+.google-icon { width: 20px; height: 20px; }
+
+/* ── Formularios ─────────────────────────────────────────────────────────── */
+
+.sw-label {
+  font-family: var(--font-mono);
+  font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.sw-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  font-family: var(--font-body); font-size: 0.9rem;
+  outline: none;
+  clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px));
+  transition: all 0.2s ease;
+}
+.sw-input:focus {
+  border-color: var(--red);
+  background: rgba(163, 0, 0, 0.12);
+  box-shadow: 0 0 12px var(--red-glow);
+}
+.sw-input::placeholder { color: var(--text-muted); }
+
+/* ── Alertas tacticas ────────────────────────────────────────────────────── */
+
+.sw-alert {
+  font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.06em;
+  padding: 0.75rem 1rem; border: 1px solid rgba(239,68,68,0.3);
+  background: rgba(239,68,68,0.07); color: #f87171; margin-bottom: 1.25rem;
+  clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px));
+}
+.sw-alert--success { border-color: rgba(34,197,94,0.3); background: rgba(34,197,94,0.07); color: #4ade80; }
+.sw-alert--info { border-color: rgba(163,0,0,0.3); background: rgba(163,0,0,0.07); color: var(--red); }
+
+/* ── Divisor con etiqueta ────────────────────────────────────────────────── */
+
+.sw-divider {
+  display: flex; align-items: center; gap: 1rem;
+  margin: 1.5rem 0;
+}
+.sw-divider::before,
+.sw-divider::after {
+  content: ''; flex: 1; height: 1px; background: var(--border);
+}
+.sw-divider-text {
+  font-family: var(--font-mono);
+  font-size: 0.6rem; letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* ── Indicador de estado pulse ──────────────────────────────────────────── */
+
+.sw-pulse {
+  display: inline-block; width: 6px; height: 6px;
+  border-radius: 50%; background: #22c55e;
+  animation: pulse 2s infinite;
+}
+
+/* ── Footer tactico ─────────────────────────────────────────────────────── */
+
+.sw-footer-note {
+  font-family: var(--font-mono);
+  font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--text-muted); text-align: center; padding: 1.5rem 1rem 1rem;
+  border-top: 1px solid var(--border);
+}
+.sw-footer-note a { color: var(--red); text-decoration: none; }
+
+/* ── HUD corners ─────────────────────────────────────────────────────────── */
+
+.hud-corner { position: absolute; width: 32px; height: 32px; pointer-events: none; }
+.hud-tl { top: 80px; left: 20px; }
+.hud-tr { top: 80px; right: 20px; }
+.hud-bl { bottom: 40px; left: 20px; }
+.hud-br { bottom: 40px; right: 20px; }
+.hud-line { position: absolute; background: rgba(163,0,0,0.4); }
+.hud-line.h { width: 100%; height: 1px; top: 0; }
+.hud-line.v { width: 1px; height: 100%; left: 0; }
+.hud-tr .hud-line.v { left: auto; right: 0; }
+.hud-bl .hud-line.h { top: auto; bottom: 0; }
+.hud-br .hud-line.h { top: auto; bottom: 0; }
+.hud-br .hud-line.v { left: auto; right: 0; }
+
+/* ── Mobile ─────────────────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .sw-auth-panel { clip-path: none; }
+  .hud-corner { display: none; }
+}
+
+[data-theme="light"] .sw-auth-panel { background: #ffffff; }
+[data-theme="light"] .tac-page { background: var(--black); color: var(--off-white); }

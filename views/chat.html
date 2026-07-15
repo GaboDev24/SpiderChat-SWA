@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SpiderWeb Chat</title>
+  
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/css/chat.css">
+  <script src="/theme.js"></script>
+  
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  
+  <!-- Marked.js para parsear markdown -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+  <div class="chat-layout">
+    
+    <!-- HEADER -->
+    <header class="chat-header">
+      <button class="sidebar-toggle" id="btnSidebarToggle" aria-label="Menu">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+      
+      <a href="/chat" class="chat-header-brand">
+        <img src="/img/logo blanco.png" data-logo-dark="/img/logo blanco.png" data-logo-light="/img/logo negro.png" data-logo-swap class="chat-header-logo" alt="SpiderWeb Logo">
+        <span class="chat-header-title">SpiderWeb <span class="red-accent">Chat</span></span>
+      </a>
+
+      <div class="chat-header-center">
+        <div class="model-select-wrap">
+          <span class="model-select-label">MÓDULO:</span>
+          <select class="model-select" id="modelSelect">
+            <option value="gpt-4o">GPT-4o (Recomendado)</option>
+            <!-- Llenado dinamicamente via JS -->
+          </select>
+        </div>
+      </div>
+
+      <div class="chat-header-user">
+        <div class="token-badge" id="tokenBadge" title="Tokens disponibles">
+          <i class="fa-solid fa-microchip"></i>
+          <span class="token-count" id="headerTokens">---</span>
+        </div>
+        
+        <img src="" alt="Avatar" class="user-avatar" id="userAvatar">
+        <span class="user-name" id="userName">Cargando...</span>
+        
+        <button class="header-btn" id="theme-toggle-btn" title="Tema">
+          <!-- Icono se llena por theme.js -->
+        </button>
+        <a href="/auth/logout" class="header-btn logout" title="Cerrar sesion">
+          <i class="fa-solid fa-power-off"></i>
+        </a>
+      </div>
+    </header>
+
+    <!-- SIDEBAR (Historial) -->
+    <aside class="chat-sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <button class="btn-new-chat" id="btnNewChat">
+          <i class="fa-solid fa-plus"></i> NUEVO CHAT
+        </button>
+      </div>
+
+      <div class="sidebar-section-label">HISTORIAL TÁCTICO</div>
+      
+      <div class="chat-list" id="chatList">
+        <!-- Llenado dinamicamente via JS -->
+        <div class="chat-list-empty">
+          <p>NO HAY CONVERSACIONES PREVIAS REGISTRADAS EN LA RED.</p>
+        </div>
+      </div>
+
+      <div class="sidebar-stats">
+        <div class="stats-row">
+          <span class="stats-label">LLAMADAS HOY</span>
+          <span class="stats-value" id="statsCalls">0 / 50</span>
+        </div>
+        <div class="stats-row">
+          <span class="stats-label">TOKENS CONSUMIDOS</span>
+          <span class="stats-value red" id="statsTokensUsed">0</span>
+        </div>
+        <div class="token-bar">
+          <div class="token-bar-fill" id="tokenProgress" style="width: 0%;"></div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- AREA PRINCIPAL -->
+    <main class="chat-main" id="chatMain">
+      
+      <!-- Vista inicial -->
+      <div class="chat-welcome" id="welcomeView">
+        <div class="chat-welcome-logo">
+          <img src="/img/logo blanco.png" data-logo-dark="/img/logo blanco.png" data-logo-light="/img/logo negro.png" data-logo-swap alt="SpiderWeb">
+        </div>
+        <h2 class="chat-welcome-title">SpiderWeb <span class="red-accent">IA</span></h2>
+        <p class="chat-welcome-sub">INICIAR CONEXIÓN SEGURA. ESPERANDO COMANDOS.</p>
+      </div>
+
+      <!-- Contenedor de mensajes -->
+      <div class="messages-container" id="messagesContainer" style="display: none;">
+        <!-- Llenado via JS -->
+      </div>
+
+      <!-- Input de chat -->
+      <div class="chat-input-area">
+        <div id="limitMessage" class="limit-message" style="display: none;"></div>
+        
+        <form class="input-row" id="chatForm">
+          <textarea 
+            class="chat-textarea" 
+            id="chatInput" 
+            placeholder="Escriba su mensaje a la IA..." 
+            rows="1"
+            autocomplete="off"
+          ></textarea>
+          <button type="submit" class="send-btn" id="btnSend" title="Enviar mensaje">
+            <i class="fa-solid fa-paper-plane" id="sendIcon"></i>
+          </button>
+        </form>
+        <div class="input-hint">
+          <span>SISTEMA ENCRIPTADO AES-256</span>
+          <span>ENTER para enviar, SHIFT+ENTER para nueva linea</span>
+        </div>
+      </div>
+    </main>
+
+  </div>
+
+  <script src="/js/chat.js"></script>
+</body>
+</html>
