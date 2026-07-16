@@ -40,54 +40,66 @@ async function q(sqlStr, params = []) {
 // ── Inicialización de tablas ──────────────────────────────────────────────
 
 async function initDB() {
-  await q(`
-    CREATE TABLE IF NOT EXISTS users (
-      id               INT AUTO_INCREMENT PRIMARY KEY,
-      email            VARCHAR(255) UNIQUE NOT NULL,
-      password_hash    VARCHAR(255) NOT NULL,
-      name             VARCHAR(255) NOT NULL,
-      tokens_remaining INT     NOT NULL DEFAULT ${TOKEN_LIMIT},
-      daily_calls_used INT     NOT NULL DEFAULT 0,
-      last_call_date   DATE             DEFAULT NULL,
-      created_at       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      updated_at       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    )
-  `);
+  const tables = [
+    {
+      name: 'users',
+      sql: `CREATE TABLE IF NOT EXISTS users (
+        id               INT AUTO_INCREMENT PRIMARY KEY,
+        email            VARCHAR(255) UNIQUE NOT NULL,
+        password_hash    VARCHAR(255) NOT NULL,
+        name             VARCHAR(255) NOT NULL,
+        tokens_remaining INT     NOT NULL DEFAULT ${TOKEN_LIMIT},
+        daily_calls_used INT     NOT NULL DEFAULT 0,
+        last_call_date   DATE             DEFAULT NULL,
+        created_at       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )`,
+    },
+    {
+      name: 'chats',
+      sql: `CREATE TABLE IF NOT EXISTS chats (
+        id         INT AUTO_INCREMENT PRIMARY KEY,
+        user_id    INT          NOT NULL,
+        title      VARCHAR(255) NOT NULL DEFAULT 'Nueva conversacion',
+        model_id   VARCHAR(255)          DEFAULT NULL,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      )`,
+    },
+    {
+      name: 'chat_messages',
+      sql: `CREATE TABLE IF NOT EXISTS chat_messages (
+        id          INT AUTO_INCREMENT PRIMARY KEY,
+        chat_id     INT  NOT NULL,
+        role        VARCHAR(50)  NOT NULL,
+        content     TEXT         NOT NULL,
+        tokens_used INT  NOT NULL DEFAULT 0,
+        created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (chat_id) REFERENCES chats(id) ON DELETE CASCADE
+      )`,
+    },
+    {
+      name: 'sessions',
+      sql: `CREATE TABLE IF NOT EXISTS sessions (
+        sid     VARCHAR(255) NOT NULL PRIMARY KEY,
+        data    TEXT         NOT NULL,
+        expires DATETIME     NOT NULL
+      )`,
+    },
+  ];
 
-  await q(`
-    CREATE TABLE IF NOT EXISTS chats (
-      id         INT AUTO_INCREMENT PRIMARY KEY,
-      user_id    INT          NOT NULL,
-      title      VARCHAR(255) NOT NULL DEFAULT 'Nueva conversacion',
-      model_id   VARCHAR(255)          DEFAULT NULL,
-      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-    )
-  `);
+  for (const table of tables) {
+    try {
+      await q(table.sql);
+      console.log(`[DB] Tabla "${table.name}" verificada`);
+    } catch (err) {
+      console.error(`[DB] Error creando tabla "${table.name}":`, err.message);
+      throw err; // propagar para que el server lo maneje
+    }
+  }
 
-  await q(`
-    CREATE TABLE IF NOT EXISTS chat_messages (
-      id          INT AUTO_INCREMENT PRIMARY KEY,
-      chat_id     INT  NOT NULL,
-      role        VARCHAR(50)  NOT NULL,
-      content     TEXT         NOT NULL,
-      tokens_used INT  NOT NULL DEFAULT 0,
-      created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (chat_id) REFERENCES chats(id) ON DELETE CASCADE
-    )
-  `);
-
-  await q(`
-    CREATE TABLE IF NOT EXISTS sessions (
-      sid     VARCHAR(255) NOT NULL PRIMARY KEY,
-      data    TEXT         NOT NULL,
-      expires DATETIME     NOT NULL,
-      INDEX idx_expires (expires)
-    )
-  `);
-
-  console.log(`[DB] Tablas verificadas en "${DB}"`);
+  console.log(`[DB] Todas las tablas verificadas en "${DB}"`);
 }
 
 // ── USUARIOS ─────────────────────────────────────────────────────────────

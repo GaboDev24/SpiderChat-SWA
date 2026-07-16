@@ -100,18 +100,16 @@ app.use((req, res) => {
 
 const { initDB } = require('./db');
 
-(async () => {
-  try {
-    await initDB();
-  } catch (err) {
-    console.error('[DB] Error al inicializar tablas:', err.message);
-    process.exit(1);
-  }
+// Inicializar tablas al arrancar — en Vercel se ejecuta en cada cold start.
+// Si falla, el servidor sigue iniciando (las rutas de DB devolverán 500
+// hasta que se corrijan las variables de entorno en el panel de Vercel).
+initDB()
+  .then(() => console.log('[DB] Listo.'))
+  .catch(err => console.error('[DB] initDB falló (verificar env vars en Vercel):', err.message));
 
-  app.listen(PORT, () => {
-    console.log(`[SpiderChat] Servidor corriendo en http://localhost:${PORT}`);
-    console.log(`[SpiderChat] Entorno: ${process.env.NODE_ENV || 'development'}`);
-  });
-})();
+app.listen(PORT, () => {
+  console.log(`[SpiderChat] Servidor corriendo en http://localhost:${PORT}`);
+  console.log(`[SpiderChat] Entorno: ${process.env.NODE_ENV || 'development'}`);
+});
 
 module.exports = app;
