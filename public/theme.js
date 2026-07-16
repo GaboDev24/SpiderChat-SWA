@@ -13,6 +13,15 @@
 
   window.addEventListener('DOMContentLoaded', function () {
     const btn = document.getElementById('theme-toggle-btn');
+    
+    // Sincronizar logos al cargar la página por si el tema inicial es light
+    function syncLogos(currentTheme) {
+      document.querySelectorAll('[data-logo-swap]').forEach(function (img) {
+        img.src = currentTheme === 'light' ? img.dataset.logoLight : img.dataset.logoDark;
+      });
+    }
+    syncLogos(theme);
+
     if (!btn) return;
 
     function updateIcon(t) {
@@ -25,18 +34,16 @@
     btn.addEventListener('click', function () {
       const isLight = document.documentElement.getAttribute('data-theme') === 'light';
       const next = isLight ? 'dark' : 'light';
+      
       if (next === 'light') {
         document.documentElement.setAttribute('data-theme', 'light');
       } else {
         document.documentElement.removeAttribute('data-theme');
       }
+      
       localStorage.setItem('sc-theme', next);
       updateIcon(next);
-
-      // Actualizar logos segun el tema
-      document.querySelectorAll('[data-logo-swap]').forEach(function (img) {
-        img.src = next === 'light' ? img.dataset.logoLight : img.dataset.logoDark;
-      });
+      syncLogos(next);
     });
   });
 })();
