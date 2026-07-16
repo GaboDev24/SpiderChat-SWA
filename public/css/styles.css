@@ -76,8 +76,8 @@ html { scroll-behavior: smooth; }
   --bg-input:      rgba(163, 0, 0, 0.04);
 
   --text-primary:   #121212;
-  --text-secondary: rgba(18, 18, 18, 0.8);
-  --text-muted:     rgba(18, 18, 18, 0.55);
+  --text-secondary: rgba(18, 18, 18, 0.9);
+  --text-muted:     rgba(18, 18, 18, 0.7);
 
   --border:       rgba(163, 0, 0, 0.15);
   --border-light: rgba(163, 0, 0, 0.06);

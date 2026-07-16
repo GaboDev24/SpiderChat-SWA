@@ -23,7 +23,11 @@ router.get('/stats', async (req, res, next) => {
     // Verificar si hay que reiniciar el contador diario
     const hoy = new Date().toISOString().split('T')[0];
     let llamadasHoy = user.daily_calls_used;
-    if (user.last_call_date && user.last_call_date !== hoy) {
+    let lastCallStr = user.last_call_date;
+    if (lastCallStr instanceof Date) lastCallStr = lastCallStr.toISOString().split('T')[0];
+    else if (typeof lastCallStr === 'string') lastCallStr = lastCallStr.split('T')[0];
+
+    if (lastCallStr && lastCallStr !== hoy) {
       llamadasHoy = 0;
     }
 

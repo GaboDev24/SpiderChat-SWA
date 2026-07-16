@@ -90,6 +90,9 @@ app.get('/chat', requireAuth, (req, res) => {
 app.use((err, req, res, _next) => {
   const isDev = process.env.NODE_ENV !== 'production';
   console.error('[Server Error]', err.message);
+  if (res.headersSent) {
+    return _next(err);
+  }
   res.status(err.status || 500).json({
     error: 'Error interno del servidor',
     detalle: isDev ? err.message : undefined,

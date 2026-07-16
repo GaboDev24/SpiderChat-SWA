@@ -61,14 +61,10 @@ class SqlSessionStore extends Store {
       .toISOString().slice(0, 19).replace('T', ' ');
     const data = JSON.stringify(session);
 
-    // Primero eliminamos si existe para evitar el ON DUPLICATE KEY que puede fallar en algunos dialectos
-    sqlQuery('DELETE FROM sessions WHERE sid = ?', [sid])
-      .then(() => {
-        return sqlQuery(
-          'INSERT INTO sessions (sid, data, expires) VALUES (?, ?, ?)',
-          [sid, data, expires]
-        );
-      })
+    sqlQuery(
+      'REPLACE INTO sessions (sid, data, expires) VALUES (?, ?, ?)',
+      [sid, data, expires]
+    )
       .then(() => callback(null))
       .catch(err => callback(err));
   }

@@ -128,8 +128,12 @@ async function checkUserLimits(userId) {
 
   const hoy = new Date().toISOString().split('T')[0];
 
+  let lastCallStr = user.last_call_date;
+  if (lastCallStr instanceof Date) lastCallStr = lastCallStr.toISOString().split('T')[0];
+  else if (typeof lastCallStr === 'string') lastCallStr = lastCallStr.split('T')[0];
+
   // Resetear contador diario si cambió el día
-  if (user.last_call_date && user.last_call_date !== hoy) {
+  if (lastCallStr && lastCallStr !== hoy) {
     await q(
       'UPDATE users SET daily_calls_used = 0, updated_at = NOW() WHERE id = ?',
       [userId]
