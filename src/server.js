@@ -25,15 +25,19 @@ if (!process.env.SESSION_SECRET) {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+const SqlSessionStore = require('./session-store');
+
 // Sesiones
 app.use(session({
+  store: new SqlSessionStore(),
   secret: process.env.SESSION_SECRET || 'spiderchat-dev-secret-inseguro',
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: process.env.NODE_ENV === 'production',
+    secure:   process.env.NODE_ENV === 'production',
     httpOnly: true,
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 dias
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 días
   },
 }));
 

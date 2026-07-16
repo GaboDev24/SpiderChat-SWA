@@ -78,6 +78,15 @@ async function initDB() {
     )
   `);
 
+  await q(`
+    CREATE TABLE IF NOT EXISTS sessions (
+      sid     VARCHAR(255) NOT NULL PRIMARY KEY,
+      data    TEXT         NOT NULL,
+      expires DATETIME     NOT NULL,
+      INDEX idx_expires (expires)
+    )
+  `);
+
   console.log(`[DB] Tablas verificadas en "${DB}"`);
 }
 
