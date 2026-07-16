@@ -2,8 +2,6 @@
 
 Plataforma de Chat impulsada por IA utilizando la **SpiderWebARG API** como backend de inteligencia artificial y almacenamiento seguro de datos en la nube.
 
-Implementa un sistema robusto de autenticación restringido únicamente a cuentas autorizadas de `@gmail.com` para garantizar la privacidad y seguridad de la información.
-
 ## Características Principales
 - **Autenticación Segura**: Utiliza credenciales cifradas, permitiendo el acceso de forma controlada a cuentas de correo predefinidas.
 - **Control de Consumo**: 
