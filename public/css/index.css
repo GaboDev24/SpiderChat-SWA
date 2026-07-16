@@ -1,0 +1,275 @@
+﻿/**
+ * SpiderChat — Landing Page (index)
+ * Misma paleta y tipografia que el resto de la app
+ */
+
+/* ── Reset de body para el index ────────────────────────────────────── */
+
+.index-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+/* Fondo con gradiente sutil */
+.index-page::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse at 50% 30%, rgba(163,0,0,0.08) 0%, transparent 65%),
+    radial-gradient(ellipse at 80% 80%, rgba(163,0,0,0.04) 0%, transparent 60%);
+}
+
+/* ── Nav ────────────────────────────────────────────────────────────── */
+
+.index-nav {
+  position: relative; z-index: 10;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 1.5rem;
+  height: var(--header-height, 60px);
+  border-bottom: 1px solid var(--border);
+  background: rgba(var(--bg-primary-rgb), 0.85);
+  backdrop-filter: blur(14px);
+  flex-shrink: 0;
+}
+
+.index-nav-actions {
+  display: flex; align-items: center; gap: 0.6rem;
+}
+
+/* Reutiliza .chat-header-brand, .chat-header-title, .chat-header-logo del chat.css
+   pero re-declaramos por si no carga chat.css aquí */
+.chat-header-brand {
+  display: flex; align-items: center; gap: 0.6rem;
+  text-decoration: none;
+}
+.chat-header-logo { height: 28px; object-fit: contain; }
+.chat-header-title {
+  font-family: var(--font-head);
+  font-size: 1.3rem; font-weight: 900;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--off-white);
+}
+.chat-header-title .red-accent { color: var(--red); }
+
+/* ── Hero centrado ──────────────────────────────────────────────────── */
+
+.index-hero {
+  position: relative; z-index: 1;
+  flex: 1;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 3rem 1rem 2rem;
+  gap: 2rem;
+}
+
+/* ── Brand / título ─────────────────────────────────────────────────── */
+
+.index-brand {
+  text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+}
+
+.index-brand-logo {
+  height: 56px; object-fit: contain;
+  opacity: 0.9;
+  animation: fadeIn 0.6s ease;
+}
+
+.index-title {
+  font-family: var(--font-head);
+  font-size: clamp(2.6rem, 7vw, 4.2rem);
+  font-weight: 900; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--off-white);
+  line-height: 1;
+  animation: slideUp 0.5s ease;
+}
+
+.index-sub {
+  font-family: var(--font-body);
+  font-size: clamp(0.95rem, 2.5vw, 1.1rem);
+  color: var(--text-secondary);
+  margin-top: 0.25rem;
+  animation: fadeIn 0.7s ease 0.1s both;
+}
+
+/* ── Input central ──────────────────────────────────────────────────── */
+
+.index-input-wrap {
+  width: 100%; max-width: 680px;
+  animation: slideUp 0.5s ease 0.15s both;
+}
+
+.index-input-form {
+  display: flex; align-items: flex-end; gap: 0;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  padding: 0.65rem 0.65rem 0.65rem 1.1rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+}
+.index-input-form:focus-within {
+  border-color: var(--red);
+  box-shadow: 0 0 0 3px var(--red-glow);
+}
+
+.index-textarea {
+  flex: 1;
+  background: transparent; border: none; outline: none;
+  color: var(--text-primary);
+  font-family: var(--font-body); font-size: 0.97rem;
+  line-height: 1.55; resize: none;
+  min-height: 28px; max-height: 200px;
+  overflow-y: auto;
+}
+.index-textarea::placeholder { color: var(--text-muted); }
+
+.index-send-btn {
+  flex-shrink: 0;
+  width: 38px; height: 38px;
+  background: var(--red); border: none; cursor: pointer;
+  color: var(--off-white); font-size: 0.95rem;
+  display: flex; align-items: center; justify-content: center;
+  clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px));
+  transition: background 0.2s, box-shadow 0.2s;
+}
+.index-send-btn:hover { background: #c40000; box-shadow: 0 0 14px var(--red-glow); }
+
+.index-input-hint {
+  margin-top: 0.6rem; text-align: center;
+  font-family: var(--font-mono);
+  font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--text-muted);
+  display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+}
+
+/* ── Chips de sugerencias ────────────────────────────────────────────── */
+
+.index-chips {
+  display: flex; flex-wrap: wrap; gap: 0.6rem;
+  justify-content: center;
+  max-width: 680px;
+  animation: fadeIn 0.6s ease 0.25s both;
+}
+
+.index-chip {
+  display: inline-flex; align-items: center; gap: 0.45rem;
+  font-family: var(--font-body); font-size: 0.82rem;
+  color: var(--text-secondary);
+  background: transparent; border: 1px solid var(--border);
+  padding: 0.45rem 0.9rem; cursor: pointer;
+  clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px));
+  transition: all 0.18s;
+}
+.index-chip:hover {
+  color: var(--off-white);
+  border-color: rgba(163,0,0,0.5);
+  background: rgba(163,0,0,0.07);
+}
+.index-chip i { color: var(--red); font-size: 0.78rem; }
+
+/* ── Pills (botones de nav y modal) ─────────────────────────────────── */
+
+.index-pill {
+  display: inline-flex; align-items: center; gap: 0.45rem;
+  font-family: var(--font-mono); font-size: 0.7rem;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 0.4rem 0.9rem; text-decoration: none;
+  border: 1px solid transparent; cursor: pointer;
+  transition: all 0.18s;
+  clip-path: polygon(0 0, calc(100% - 5px) 0, 100% 5px, 100% 100%, 5px 100%, 0 calc(100% - 5px));
+}
+.index-pill--primary {
+  background: var(--red); color: var(--off-white); border-color: var(--red);
+}
+.index-pill--primary:hover { background: #c40000; box-shadow: 0 0 16px var(--red-glow); }
+.index-pill--ghost {
+  background: transparent; color: var(--text-secondary); border-color: var(--border);
+}
+.index-pill--ghost:hover { color: var(--red); border-color: var(--red); }
+.index-pill--lg { padding: 0.65rem 1.5rem; font-size: 0.76rem; }
+
+/* ── Modal de login ─────────────────────────────────────────────────── */
+
+.index-modal-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,0.75); backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 1rem;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+.index-modal-overlay.active { opacity: 1; pointer-events: auto; }
+
+.index-modal {
+  position: relative;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  padding: 2.5rem 2rem;
+  max-width: 420px; width: 100%;
+  text-align: center;
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+  transform: scale(0.95) translateY(8px);
+  transition: transform 0.25s ease;
+}
+.index-modal-overlay.active .index-modal { transform: scale(1) translateY(0); }
+
+.index-modal-icon { font-size: 2.2rem; color: var(--red); margin-bottom: 0.9rem; }
+
+.index-modal-title {
+  font-family: var(--font-head);
+  font-size: 1.55rem; font-weight: 900; text-transform: uppercase;
+  letter-spacing: 0.05em; color: var(--off-white); margin-bottom: 0.5rem;
+}
+
+.index-modal-sub {
+  font-family: var(--font-body); font-size: 0.86rem;
+  color: var(--text-secondary); line-height: 1.5; margin-bottom: 1.6rem;
+}
+
+.index-modal-actions {
+  display: flex; flex-direction: column; gap: 0.7rem; align-items: center;
+}
+
+.index-modal-close {
+  position: absolute; top: 0.7rem; right: 0.7rem;
+  background: transparent; border: none;
+  color: var(--text-muted); font-size: 1rem;
+  cursor: pointer; padding: 0.3rem; transition: color 0.2s;
+}
+.index-modal-close:hover { color: var(--text-primary); }
+
+/* ── Botón header de tema ───────────────────────────────────────────── */
+
+.header-btn {
+  display: flex; align-items: center; gap: 0.4rem;
+  font-family: var(--font-mono); font-size: 0.65rem;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--text-secondary);
+  background: transparent; border: 1px solid transparent;
+  padding: 0.35rem 0.7rem; cursor: pointer;
+  transition: all 0.2s; text-decoration: none;
+}
+.header-btn:hover { color: var(--red); border-color: var(--border); }
+
+/* ── Modo claro ─────────────────────────────────────────────────────── */
+
+[data-theme="light"] .index-modal { background: #ffffff; }
+[data-theme="light"] .index-chip { border-color: rgba(163,0,0,0.15); }
+[data-theme="light"] .index-input-form { background: rgba(163,0,0,0.03); }
+
+/* ── Responsive ─────────────────────────────────────────────────────── */
+
+@media (max-width: 600px) {
+  .index-hero { padding: 2rem 1rem; gap: 1.5rem; }
+  .index-brand-logo { height: 44px; }
+  .index-chips { gap: 0.5rem; }
+  .index-chip { font-size: 0.78rem; padding: 0.4rem 0.75rem; }
+  .index-nav-actions .index-pill--ghost { display: none; }
+}
+
+@media (max-width: 380px) {
+  .index-chips { flex-direction: column; align-items: center; }
+  .index-chip { width: 100%; justify-content: center; }
+}

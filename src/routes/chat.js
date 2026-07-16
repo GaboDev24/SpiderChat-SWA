@@ -151,7 +151,7 @@ router.post('/send', async (req, res, next) => {
       contenidoRespuesta = respuestaIA.response;
     }
 
-    const tokensUsados = respuestaIA?.tokens_used || respuestaIA?.usage?.total_tokens || 0;
+    const tokensUsados = respuestaIA?.usage?.total_tokens || respuestaIA?.tokens_used || 0;
 
     // Guardar la respuesta del asistente
     db.addMessage(chat.id, 'assistant', contenidoRespuesta, tokensUsados);

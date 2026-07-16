@@ -5,47 +5,122 @@
       "email": "gabrielreina052@gmail.com",
       "password_hash": "$2b$10$0QT9TyKESXQSRX0HmTQ5aO/jlP/QeNFg7OsN4nV8/vreCzQ8exxHS",
       "name": "GaboDev24",
-      "tokens_remaining": 50000,
-      "daily_calls_used": 0,
-      "last_call_date": null,
+      "tokens_remaining": 47178,
+      "daily_calls_used": 8,
+      "last_call_date": "2026-07-16",
       "created_at": "2026-07-15T13:33:21.967Z",
-      "updated_at": "2026-07-15T13:33:21.967Z"
+      "updated_at": "2026-07-16T01:50:54.980Z"
+    },
+    {
+      "id": 2,
+      "email": "test@gmail.com",
+      "password_hash": "$2b$10$DwFRxV63XiuGThmFIJG4fOpwch38uAWwHGvCREglXPZS7CVGtulhW",
+      "name": "Test",
+      "tokens_remaining": 49957,
+      "daily_calls_used": 1,
+      "last_call_date": "2026-07-15",
+      "created_at": "2026-07-15T22:47:50.579Z",
+      "updated_at": "2026-07-15T22:47:52.138Z"
     }
   ],
   "chats": [
     {
-      "id": 1,
-      "user_id": 1,
-      "title": "Hola, que es python",
-      "model_id": "gpt-4o",
-      "created_at": "2026-07-15T13:34:15.752Z",
-      "updated_at": "2026-07-15T13:34:15.753Z"
+      "id": 3,
+      "user_id": 2,
+      "title": "Hola, c�mo est�s?",
+      "model_id": 9,
+      "created_at": "2026-07-15T22:47:50.636Z",
+      "updated_at": "2026-07-15T22:47:52.137Z"
     },
     {
-      "id": 2,
+      "id": 8,
       "user_id": 1,
-      "title": "Hola, que es python",
-      "model_id": "gpt-4o",
-      "created_at": "2026-07-15T13:38:03.968Z",
-      "updated_at": "2026-07-15T13:38:03.968Z"
+      "title": "Hola, que es python? dame un codigo de ejemplo por...",
+      "model_id": "13",
+      "created_at": "2026-07-16T01:39:24.253Z",
+      "updated_at": "2026-07-16T01:49:21.351Z"
+    },
+    {
+      "id": 9,
+      "user_id": 1,
+      "title": "Hazme un mini menu en terminal para python",
+      "model_id": "13",
+      "created_at": "2026-07-16T01:50:26.794Z",
+      "updated_at": "2026-07-16T01:50:54.979Z"
     }
   ],
   "chat_messages": [
     {
-      "id": 1,
-      "chat_id": 1,
+      "id": 3,
+      "chat_id": 3,
       "role": "user",
-      "content": "Hola, que es python",
+      "content": "Hola, c�mo est�s?",
       "tokens_used": 0,
-      "created_at": "2026-07-15T13:34:15.753Z"
+      "created_at": "2026-07-15T22:47:50.637Z"
     },
     {
-      "id": 2,
-      "chat_id": 2,
+      "id": 4,
+      "chat_id": 3,
+      "role": "assistant",
+      "content": "Hola! ¿Cómo estás?",
+      "tokens_used": 43,
+      "created_at": "2026-07-15T22:47:52.137Z"
+    },
+    {
+      "id": 17,
+      "chat_id": 8,
       "role": "user",
-      "content": "Hola, que es python",
+      "content": "Hola, que es python? dame un codigo de ejemplo porfavor.",
       "tokens_used": 0,
-      "created_at": "2026-07-15T13:38:03.968Z"
+      "created_at": "2026-07-16T01:39:24.254Z"
+    },
+    {
+      "id": 18,
+      "chat_id": 8,
+      "role": "assistant",
+      "content": "¡Hola! Python es un lenguaje de programación de alto nivel, conocido por su sintaxis clara y su amplia utilización en desarrollo web, ciencia de datos, automatización y más.\n\nAquí tienes un ejemplo sencillo de cómo usar Python para imprimir un mensaje:\n\n```python\nprint(\"¡Hola, mundo!\")\n```\n\nSi necesitas un ejemplo más específico (como leer archivos, trabajar con datos, crear funciones, etc.), ¡avísame! Estoy aquí para ayudarte. 😊",
+      "tokens_used": 155,
+      "created_at": "2026-07-16T01:39:32.095Z"
+    },
+    {
+      "id": 19,
+      "chat_id": 8,
+      "role": "user",
+      "content": "Dame una mini calculadora en python",
+      "tokens_used": 0,
+      "created_at": "2026-07-16T01:40:23.306Z"
+    },
+    {
+      "id": 20,
+      "chat_id": 8,
+      "role": "assistant",
+      "content": "¡Claro! Aquí tienes un ejemplo sencillo de una mini calculadora en Python que realiza operaciones básicas como suma, resta, multiplicación y división:\n\n```python\ndef calcular():\n    operador = input(\"Elige la operación (+, -, *, /): \")\n    num1 = float(input(\"Ingresa el primer número: \"))\n    operador2 = float(input(\"Ingresa el segundo número: \"))\n    resultado = 0\n\n    if operador == \"+\":\n        resultado = num1 + num2\n    elif operador == \"-\":\n        resultado = num1 - num2\n    elif operador == \"*\":\n        resultado = num1 * num2\n    elif operador == \"/\":\n        if num2 != 0:\n            resultado = num1 / num2\n        else:\n            print(\"Error: No se puede dividir por cero\")\n    else:\n        print(\"Operación no válida\")\n\n    print(f\"El resultado es: {resultado}\")\n\n# Ejecutar la calculadora\ncalcular()\n```\n\n### Cómo funciona:\n1. El usuario elige una operación (+, -, *, /).\n2. Se le pide ingresar dos números.\n3. Se realiza la operación seleccionada y se muestra el resultado.\n\n¿Quieres que lo haga con gráficos o con una interfaz gráfica? ¡Puedo ayudarte con eso también! 😊",
+      "tokens_used": 485,
+      "created_at": "2026-07-16T01:40:41.311Z"
+    },
+    {
+      "id": 21,
+      "chat_id": 8,
+      "role": "user",
+      "content": "Ahora hazme un menu de terminal",
+      "tokens_used": 0,
+      "created_at": "2026-07-16T01:49:21.351Z"
+    },
+    {
+      "id": 22,
+      "chat_id": 9,
+      "role": "user",
+      "content": "Hazme un mini menu en terminal para python",
+      "tokens_used": 0,
+      "created_at": "2026-07-16T01:50:26.795Z"
+    },
+    {
+      "id": 23,
+      "chat_id": 9,
+      "role": "assistant",
+      "content": "¡Claro! Aquí tienes un ejemplo de un mini menú en terminal para Python que muestra opciones básicas como \"Instalar\", \"Ejecutar\", \"Ver historial\" y \"Ayuda\":\n\n```bash\n# Mini Menú en Terminal para Python\n\n# Instalar\necho \"¿Quieres instalar una biblioteca o herramienta específica?\"\nread -r install_choice\ncase $install_choice in\n  \"instalar\")\n    echo \"Instalando [nombre de la biblioteca]...\"\n    # Aquí iría el comando para instalar\n    ;;\n  *)\n    echo \"Opción no válida.\"\n    ;;\nesac\n\n# Ejecutar\necho \"¿Quieres ejecutar un script o programa?\"\nread -r run_choice\ncase $run_choice in\n  \"ejecutar\")\n    echo \"Ejecutando [nombre del archivo]...\"\n    # Aquí iría el comando para ejecutar\n    ;;\n  *)\n    echo \"Opción no válida.\"\n    ;;\nesac\n\n# Ver historial\necho \"¿Quieres ver el historial de comandos?\"\nhistory_choice\ncase $history_choice in\n  \"historial\")\n    echo \"Mostrando tu historial...\"\n    # Aquí iría la lógica para mostrar comandos anteriores\n    ;;\n  *)\n    echo \"Opción no válida.\"\n    ;;\nesac\n\n# Ayuda\necho \"¿Quieres ver ayuda sobre este comando?\"\nhelp_choice\ncase $help_choice in\n  \"ayuda\")\n    echo \"Opciones disponibles:\"\n    echo \"1. Instalar\"\n    echo \"2. Ejecutar\"\n    echo \"3. Ver historial\"\n    echo \"4. Ayuda\"\n    ;;\n  *)\n    echo \"Opción no válida.\"\n    ;;\nesac\n```\n\n### Cómo usarlo:\n1. Guarda el código en un archivo, por ejemplo `menu_python.sh`.\n2. Ejecútalo desde la terminal:  \n   ```bash\n   bash menu_python.sh\n   ```\n3. Sigue las opciones que te muestren.\n\n¿Quieres que lo adapte para una aplicación específica o con más funcionalidades?",
+      "tokens_used": 530,
+      "created_at": "2026-07-16T01:50:54.979Z"
     }
   ]
 }

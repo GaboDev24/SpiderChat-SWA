@@ -1,0 +1,115 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SpiderChat — IA Conversacional</title>
+  <meta name="description" content="SpiderChat es una plataforma de chat con inteligencia artificial. Hablá con modelos de IA avanzados de forma simple y segura.">
+  <link rel="icon" type="image/png" href="/img/logo blanco.png">
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/css/index.css">
+  <script src="/theme.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+<body class="index-page">
+
+  <!-- HEADER -->
+  <header class="index-nav">
+    <a href="/" class="chat-header-brand">
+      <img src="/img/logo blanco.png" data-logo-dark="/img/logo blanco.png" data-logo-light="/img/logo negro.png" data-logo-swap class="chat-header-logo" alt="SpiderChat">
+      <span class="chat-header-title">Spider<span class="red-accent">Chat</span></span>
+    </a>
+    <div class="index-nav-actions">
+      <button class="header-btn" id="theme-toggle-btn" title="Cambiar tema"></button>
+      <a href="/login"   class="index-pill index-pill--ghost">Iniciar sesión</a>
+      <a href="/register" class="index-pill index-pill--primary">Crear cuenta</a>
+    </div>
+  </header>
+
+  <!-- HERO / MAIN -->
+  <main class="index-hero">
+
+    <!-- Logo + título -->
+    <div class="index-brand">
+      <img class="index-brand-logo" src="/img/logo blanco.png"
+           data-logo-dark="/img/logo blanco.png"
+           data-logo-light="/img/logo negro.png"
+           data-logo-swap alt="SpiderChat">
+      <h1 class="index-title">Spider<span class="red-accent">Chat</span></h1>
+      <p class="index-sub">¿En qué puedo ayudarte hoy?</p>
+    </div>
+
+    <!-- Input central -->
+    <div class="index-input-wrap">
+      <form class="index-input-form" onsubmit="showLoginModal(); return false;">
+        <textarea
+          id="indexInput"
+          class="index-textarea"
+          placeholder="Escribí tu mensaje..."
+          rows="1"
+          onfocus="showLoginModal()"
+        ></textarea>
+        <button type="submit" class="index-send-btn" title="Enviar" onclick="showLoginModal(); return false;">
+          <i class="fa-solid fa-arrow-up"></i>
+        </button>
+      </form>
+      <p class="index-input-hint">
+        <i class="fa-solid fa-lock" style="font-size:0.6rem;"></i>
+        Iniciá sesión para enviar mensajes · Conexión segura
+      </p>
+    </div>
+
+    <!-- Chips de sugerencias -->
+    <div class="index-chips">
+      <button class="index-chip" onclick="showLoginModal()">
+        <i class="fa-solid fa-code"></i> Ayudame con código
+      </button>
+      <button class="index-chip" onclick="showLoginModal()">
+        <i class="fa-solid fa-pen-nib"></i> Redactar un texto
+      </button>
+      <button class="index-chip" onclick="showLoginModal()">
+        <i class="fa-solid fa-magnifying-glass"></i> Explicame un concepto
+      </button>
+      <button class="index-chip" onclick="showLoginModal()">
+        <i class="fa-solid fa-language"></i> Traducir algo
+      </button>
+    </div>
+
+  </main>
+
+  <!-- MODAL LOGIN -->
+  <div class="index-modal-overlay" id="loginModal" onclick="hideLoginModal(event)">
+    <div class="index-modal">
+      <div class="index-modal-icon"><i class="fa-solid fa-spider"></i></div>
+      <h2 class="index-modal-title">Iniciá sesión para continuar</h2>
+      <p class="index-modal-sub">Creá tu cuenta gratis y accedé a todos los modelos de IA disponibles en SpiderChat.</p>
+      <div class="index-modal-actions">
+        <a href="/login"    class="index-pill index-pill--primary index-pill--lg">
+          <i class="fa-solid fa-right-to-bracket"></i> Iniciar sesión
+        </a>
+        <a href="/register" class="index-pill index-pill--ghost index-pill--lg">
+          <i class="fa-solid fa-user-plus"></i> Crear cuenta gratis
+        </a>
+      </div>
+      <button class="index-modal-close" onclick="hideLoginModal()" title="Cerrar">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+  </div>
+
+  <script>
+    function showLoginModal() {
+      document.getElementById('loginModal').classList.add('active');
+      document.getElementById('indexInput').blur();
+    }
+    function hideLoginModal(e) {
+      if (!e || e.target === document.getElementById('loginModal')) {
+        document.getElementById('loginModal').classList.remove('active');
+      }
+    }
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') hideLoginModal();
+    });
+  </script>
+</body>
+</html>

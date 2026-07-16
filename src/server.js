@@ -60,7 +60,7 @@ const viewsDir = path.join(__dirname, '..', 'views');
 
 app.get('/', (req, res) => {
   if (req.isAuthenticated()) return res.redirect('/chat');
-  res.redirect('/login');
+  res.sendFile(path.join(viewsDir, 'index.html'));
 });
 
 app.get('/login', (req, res) => {

@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SpiderWeb Chat — Iniciar Sesion</title>
+  <link rel="icon" type="image/png" href="/img/logo blanco.png">
   <link rel="stylesheet" href="/css/styles.css">
   <link rel="stylesheet" href="/css/tactical.css">
   <script src="/theme.js"></script>
@@ -25,7 +26,7 @@
         <div class="sw-auth-dot r"></div>
         <div class="sw-auth-dot y"></div>
         <div class="sw-auth-dot g"></div>
-        <div class="sw-auth-title">SPIDERWEB :: AUTH_SYS</div>
+        <div class="sw-auth-title">SPIDERWEB :: LOGIN</div>
       </div>
       
       <div class="sw-auth-body">
@@ -50,12 +51,12 @@
           </div>
 
           <button type="submit" class="sw-btn sw-btn--primary sw-btn--full" id="submitBtn">
-            <i class="fa-solid fa-right-to-bracket"></i> INGRESAR AL SISTEMA
+            <i class="fa-solid fa-right-to-bracket"></i> INICIAR SESIÓN
           </button>
         </form>
         
         <div class="sw-divider">
-          <span class="sw-divider-text">¿NUEVO OPERATIVO?</span>
+          <span class="sw-divider-text">¿ERES NUEVO?</span>
         </div>
         
         <div style="text-align: center;">
@@ -100,7 +101,7 @@
         errorMsg.style.display = 'block';
         errorMsg.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> ${err.message}`;
         submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> INGRESAR AL SISTEMA';
+        submitBtn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> INICIAR SESIÓN';
       }
     });
   </script>

@@ -284,9 +284,8 @@ async function sendMessage(text) {
       return;
     }
     
-    appendMessage('assistant', data.message);
-    scrollToBottom();
-    
+    await typewriterMessage(data.message);
+
     // Si era nuevo chat, guardamos el id
     if (!state.currentChatId && data.chat_id) {
       state.currentChatId = data.chat_id;
@@ -343,15 +342,57 @@ function appendMessage(role, content, dateStr = null) {
   time.textContent = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   bubble.appendChild(time);
   
-  if (role === 'user') {
-    div.appendChild(bubble);
-    div.appendChild(av);
-  } else {
-    div.appendChild(av);
-    div.appendChild(bubble);
-  }
+  div.appendChild(av);
+  div.appendChild(bubble);
   
   UI.messagesContainer.appendChild(div);
+}
+
+/**
+ * Renderiza la respuesta del asistente con efecto typewriter (palabra a palabra).
+ * Hace re-parse de markdown en cada paso para que los bloques se formen progresivamente.
+ */
+async function typewriterMessage(content) {
+  const div = document.createElement('div');
+  div.className = 'message assistant';
+
+  const av = document.createElement('div');
+  av.className = 'message-avatar assistant-av';
+  av.innerHTML = '<i class="fa-solid fa-spider"></i>';
+
+  const bubble = document.createElement('div');
+  bubble.className = 'message-bubble';
+
+  div.appendChild(av);
+  div.appendChild(bubble);
+  UI.messagesContainer.appendChild(div);
+
+  // Separar por palabras preservando espacios/saltos
+  const tokens = content.split(/( +|\n)/);
+  let current = '';
+  let wordCount = 0;
+  const DELAY_MS = 28; // ~35 palabras/seg
+
+  for (const token of tokens) {
+    current += token;
+    wordCount++;
+
+    // Re-renderizar markdown y hacer scroll cada 2 tokens
+    bubble.innerHTML = marked.parse(current);
+    if (wordCount % 2 === 0) scrollToBottom();
+
+    await new Promise(r => setTimeout(r, DELAY_MS));
+  }
+
+  // Asegurarse de render final completo y agregar timestamp
+  bubble.innerHTML = marked.parse(content);
+
+  const time = document.createElement('div');
+  time.className = 'message-time';
+  time.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  bubble.appendChild(time);
+
+  scrollToBottom();
 }
 
 function showTypingIndicator() {
@@ -386,7 +427,7 @@ function setLoadingState(loading) {
   UI.btnSend.disabled = loading;
   if (loading) {
     UI.btnSend.classList.add('loading');
-    UI.sendIcon.className = 'fa-solid fa-circle-notch';
+    UI.sendIcon.className = 'fa-solid fa-circle-notch fa-spin';
   } else {
     UI.btnSend.classList.remove('loading');
     UI.sendIcon.className = 'fa-solid fa-paper-plane';
