@@ -33,48 +33,64 @@ router.get('/models', async (req, res, next) => {
 
 // ── Historial de chats ────────────────────────────────────────────────────
 
-router.get('/history', (req, res) => {
-  const chats = db.getUserChats(req.user.id);
-  res.json(chats);
+router.get('/history', async (req, res, next) => {
+  try {
+    const chats = await db.getUserChats(req.user.id);
+    res.json(chats);
+  } catch (err) {
+    next(err);
+  }
 });
 
 // ── Obtener un chat especifico con mensajes ───────────────────────────────
 
-router.get('/:id', (req, res) => {
-  const chatId = parseInt(req.params.id, 10);
-  if (isNaN(chatId)) return res.status(400).json({ error: 'ID invalido' });
+router.get('/:id', async (req, res, next) => {
+  try {
+    const chatId = parseInt(req.params.id, 10);
+    if (isNaN(chatId)) return res.status(400).json({ error: 'ID invalido' });
 
-  const chat = db.getChatWithMessages(chatId, req.user.id);
-  if (!chat) return res.status(404).json({ error: 'Chat no encontrado' });
+    const chat = await db.getChatWithMessages(chatId, req.user.id);
+    if (!chat) return res.status(404).json({ error: 'Chat no encontrado' });
 
-  res.json(chat);
+    res.json(chat);
+  } catch (err) {
+    next(err);
+  }
 });
 
 // ── Actualizar titulo de chat ─────────────────────────────────────────────
 
-router.patch('/:id/title', (req, res) => {
-  const chatId = parseInt(req.params.id, 10);
-  if (isNaN(chatId)) return res.status(400).json({ error: 'ID invalido' });
+router.patch('/:id/title', async (req, res, next) => {
+  try {
+    const chatId = parseInt(req.params.id, 10);
+    if (isNaN(chatId)) return res.status(400).json({ error: 'ID invalido' });
 
-  const { title } = req.body;
-  if (!title || typeof title !== 'string' || title.trim().length === 0) {
-    return res.status(400).json({ error: 'Titulo invalido' });
+    const { title } = req.body;
+    if (!title || typeof title !== 'string' || title.trim().length === 0) {
+      return res.status(400).json({ error: 'Titulo invalido' });
+    }
+
+    await db.updateChatTitle(chatId, req.user.id, title.trim().slice(0, 100));
+    res.json({ ok: true });
+  } catch (err) {
+    next(err);
   }
-
-  db.updateChatTitle(chatId, req.user.id, title.trim().slice(0, 100));
-  res.json({ ok: true });
 });
 
 // ── Eliminar chat ─────────────────────────────────────────────────────────
 
-router.delete('/:id', (req, res) => {
-  const chatId = parseInt(req.params.id, 10);
-  if (isNaN(chatId)) return res.status(400).json({ error: 'ID invalido' });
+router.delete('/:id', async (req, res, next) => {
+  try {
+    const chatId = parseInt(req.params.id, 10);
+    if (isNaN(chatId)) return res.status(400).json({ error: 'ID invalido' });
 
-  const eliminado = db.deleteChat(chatId, req.user.id);
-  if (!eliminado) return res.status(404).json({ error: 'Chat no encontrado' });
+    const eliminado = await db.deleteChat(chatId, req.user.id);
+    if (!eliminado) return res.status(404).json({ error: 'Chat no encontrado' });
 
-  res.json({ ok: true });
+    res.json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
 });
 
 // ── Enviar mensaje ────────────────────────────────────────────────────────
@@ -92,10 +108,10 @@ router.post('/send', async (req, res, next) => {
     }
 
     // Verificar limites del usuario
-    const { ok, reason, user } = db.checkUserLimits(req.user.id);
+    const { ok, reason, user } = await db.checkUserLimits(req.user.id);
     if (!ok) {
       const mensajes = {
-        tokens_agotados: 'Has agotado tus 50.000 tokens disponibles. Contacta con soporte para recargar.',
+        tokens_agotados:          'Has agotado tus 50.000 tokens disponibles. Contacta con soporte para recargar.',
         llamadas_diarias_agotadas: `Has alcanzado el limite de ${db.DAILY_CALL_LIMIT} llamadas por dia. Vuelve manana.`,
       };
       return res.status(429).json({ error: mensajes[reason] || 'Limite alcanzado', reason });
@@ -104,19 +120,18 @@ router.post('/send', async (req, res, next) => {
     // Obtener o crear el chat
     let chat;
     if (chat_id) {
-      chat = db.getChatWithMessages(parseInt(chat_id, 10), req.user.id);
+      chat = await db.getChatWithMessages(parseInt(chat_id, 10), req.user.id);
       if (!chat) return res.status(404).json({ error: 'Chat no encontrado' });
     } else {
-      // Titulo automatico con las primeras palabras del mensaje
       const titulo = message.trim().slice(0, 50) + (message.trim().length > 50 ? '...' : '');
-      chat = db.createChat(req.user.id, titulo, model_id);
+      chat = await db.createChat(req.user.id, titulo, model_id);
       chat.messages = [];
     }
 
     // Guardar el mensaje del usuario
-    db.addMessage(chat.id, 'user', message.trim(), 0);
+    await db.addMessage(chat.id, 'user', message.trim(), 0);
 
-    // Construir el historial completo de mensajes para enviar a la IA
+    // Construir historial completo para enviar a la IA
     const historial = [
       ...chat.messages,
       { role: 'user', content: message.trim() },
@@ -127,7 +142,6 @@ router.post('/send', async (req, res, next) => {
     try {
       respuestaIA = await ia.chat(model_id, historial);
     } catch (iaErr) {
-      // Si la API de IA falla, no consumir tokens
       if (iaErr instanceof ApiError) {
         return res.status(502).json({
           error: 'Error al comunicarse con SpiderIA',
@@ -137,7 +151,7 @@ router.post('/send', async (req, res, next) => {
       throw iaErr;
     }
 
-    // Extraer el contenido de la respuesta segun el formato detectado
+    // Extraer contenido de la respuesta
     let contenidoRespuesta = 'Sin respuesta';
     if (respuestaIA?.message && typeof respuestaIA.message === 'object') {
       contenidoRespuesta = respuestaIA.message.content;
@@ -153,19 +167,17 @@ router.post('/send', async (req, res, next) => {
 
     const tokensUsados = respuestaIA?.usage?.total_tokens || respuestaIA?.tokens_used || 0;
 
-    // Guardar la respuesta del asistente
-    db.addMessage(chat.id, 'assistant', contenidoRespuesta, tokensUsados);
-
-    // Descontar tokens y registrar la llamada
-    db.consumeTokens(req.user.id, tokensUsados);
+    // Guardar respuesta del asistente y descontar tokens
+    await db.addMessage(chat.id, 'assistant', contenidoRespuesta, tokensUsados);
+    await db.consumeTokens(req.user.id, tokensUsados);
 
     // Obtener datos actualizados del usuario
-    const usuarioActualizado = db.getUserById(req.user.id);
+    const usuarioActualizado = await db.getUserById(req.user.id);
 
     res.json({
-      chat_id: chat.id,
-      message: contenidoRespuesta,
-      tokens_used: tokensUsados,
+      chat_id:          chat.id,
+      message:          contenidoRespuesta,
+      tokens_used:      tokensUsados,
       tokens_remaining: usuarioActualizado.tokens_remaining,
       daily_calls_used: usuarioActualizado.daily_calls_used,
       daily_calls_limit: db.DAILY_CALL_LIMIT,

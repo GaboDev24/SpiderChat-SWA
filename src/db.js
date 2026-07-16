@@ -1,227 +1,216 @@
 'use strict';
 
 /**
- * SpiderChat — Capa de Datos (JSON Database)
+ * SpiderChat — Capa de Datos (SpiderWebARG SQL)
  *
- * Se ha reemplazado better-sqlite3 por un storage JSON síncrono
- * debido a incompatibilidades de compilación nativa en Node v26+.
+ * Reemplaza el storage JSON local por la base de datos SQL remota
+ * configurada en DATABASE_NAME del archivo .env.
  */
 
 require('dotenv').config();
-const fs = require('fs');
-const path = require('path');
+const { sql } = require('../api-client');
 
-const DB_PATH = path.join(__dirname, '..', 'data', 'spiderchat.json');
-
-const TOKEN_LIMIT = parseInt(process.env.USER_TOKEN_LIMIT || '50000', 10);
+const DB = process.env.DATABASE_NAME;
+const TOKEN_LIMIT      = parseInt(process.env.USER_TOKEN_LIMIT   || '50000', 10);
 const DAILY_CALL_LIMIT = parseInt(process.env.USER_DAILY_CALL_LIMIT || '50', 10);
 
-// Asegurar carpeta data/
-const dataDir = path.join(__dirname, '..', 'data');
-if (!fs.existsSync(dataDir)) {
-  fs.mkdirSync(dataDir, { recursive: true });
+if (!DB) {
+  throw new Error('[DB] Variable de entorno DATABASE_NAME no definida.');
 }
 
-// Inicializar BD si no existe
-if (!fs.existsSync(DB_PATH)) {
-  const initialData = {
-    users: [],
-    chats: [],
-    chat_messages: []
-  };
-  fs.writeFileSync(DB_PATH, JSON.stringify(initialData), 'utf-8');
-}
+// ── Helper ────────────────────────────────────────────────────────────────
 
 /**
- * Carga todos los datos a memoria (Sincrónico)
+ * Ejecuta una query SQL y devuelve el resultado normalizado.
+ * @param {string} sqlStr  Sentencia SQL
+ * @param {Array}  params  Parámetros opcionales
+ * @returns {Promise<{rows: Array, affectedRows: number, insertId: number}>}
  */
-function readDB() {
-  try {
-    const content = fs.readFileSync(DB_PATH, 'utf-8');
-    return JSON.parse(content);
-  } catch (err) {
-    return { users: [], chats: [], chat_messages: [] };
-  }
+async function q(sqlStr, params = []) {
+  const res = await sql.query(DB, sqlStr, params);
+  // SELECT  → { success: true, result: [ {...row}, ... ] }
+  // DML/DDL → { success: true, result: { affectedRows, insertId, changedRows } }
+  const result = res?.result ?? res;
+  const rows         = Array.isArray(result) ? result : [];
+  const affectedRows = Array.isArray(result) ? rows.length : (result?.affectedRows ?? 0);
+  const insertId     = Array.isArray(result) ? null       : (result?.insertId     ?? null);
+  return { rows, affectedRows, insertId };
 }
 
-/**
- * Guarda los datos desde la memoria al disco (Sincrónico)
- */
-function writeDB(data) {
-  fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2), 'utf-8');
-}
+// ── Inicialización de tablas ──────────────────────────────────────────────
 
-// ── UTILIDADES DE ID ──────────────────────────────────────────────────────
+async function initDB() {
+  await q(`
+    CREATE TABLE IF NOT EXISTS users (
+      id               INT AUTO_INCREMENT PRIMARY KEY,
+      email            VARCHAR(255) UNIQUE NOT NULL,
+      password_hash    VARCHAR(255) NOT NULL,
+      name             VARCHAR(255) NOT NULL,
+      tokens_remaining INT     NOT NULL DEFAULT ${TOKEN_LIMIT},
+      daily_calls_used INT     NOT NULL DEFAULT 0,
+      last_call_date   DATE             DEFAULT NULL,
+      created_at       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    )
+  `);
 
-function getNextId(table) {
-  if (!table || table.length === 0) return 1;
-  const maxId = table.reduce((max, item) => (item.id > max ? item.id : max), 0);
-  return maxId + 1;
+  await q(`
+    CREATE TABLE IF NOT EXISTS chats (
+      id         INT AUTO_INCREMENT PRIMARY KEY,
+      user_id    INT          NOT NULL,
+      title      VARCHAR(255) NOT NULL DEFAULT 'Nueva conversacion',
+      model_id   VARCHAR(255)          DEFAULT NULL,
+      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
+
+  await q(`
+    CREATE TABLE IF NOT EXISTS chat_messages (
+      id          INT AUTO_INCREMENT PRIMARY KEY,
+      chat_id     INT  NOT NULL,
+      role        VARCHAR(50)  NOT NULL,
+      content     TEXT         NOT NULL,
+      tokens_used INT  NOT NULL DEFAULT 0,
+      created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (chat_id) REFERENCES chats(id) ON DELETE CASCADE
+    )
+  `);
+
+  console.log(`[DB] Tablas verificadas en "${DB}"`);
 }
 
 // ── USUARIOS ─────────────────────────────────────────────────────────────
 
-function createUser(email, passwordHash, name) {
-  const db = readDB();
-  const newUser = {
-    id: getNextId(db.users),
-    email,
-    password_hash: passwordHash,
-    name,
-    tokens_remaining: TOKEN_LIMIT,
-    daily_calls_used: 0,
-    last_call_date: null,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  };
-  db.users.push(newUser);
-  writeDB(db);
-  return newUser;
+async function createUser(email, passwordHash, name) {
+  const { insertId } = await q(
+    'INSERT INTO users (email, password_hash, name) VALUES (?, ?, ?)',
+    [email, passwordHash, name]
+  );
+  return getUserById(insertId);
 }
 
-function getUserByEmail(email) {
-  const db = readDB();
-  return db.users.find((u) => u.email === email) || null;
+async function getUserByEmail(email) {
+  const { rows } = await q('SELECT * FROM users WHERE email = ? LIMIT 1', [email]);
+  return rows[0] || null;
 }
 
-function getUserById(userId) {
-  const db = readDB();
-  return db.users.find((u) => u.id === userId) || null;
+async function getUserById(userId) {
+  const { rows } = await q('SELECT * FROM users WHERE id = ? LIMIT 1', [userId]);
+  return rows[0] || null;
 }
 
-function checkUserLimits(userId) {
-  const db = readDB();
-  const user = db.users.find((u) => u.id === userId);
-  
-  if (!user) return { ok: false, reason: 'Usuario no encontrado', user: null };
+async function checkUserLimits(userId) {
+  const user = await getUserById(userId);
+  if (!user) return { ok: false, reason: 'usuario_no_encontrado', user: null };
 
   const hoy = new Date().toISOString().split('T')[0];
-  let updated = false;
 
+  // Resetear contador diario si cambió el día
   if (user.last_call_date && user.last_call_date !== hoy) {
+    await q(
+      'UPDATE users SET daily_calls_used = 0, updated_at = NOW() WHERE id = ?',
+      [userId]
+    );
     user.daily_calls_used = 0;
-    user.updated_at = new Date().toISOString();
-    updated = true;
   }
 
-  if (updated) {
-    writeDB(db);
-  }
-
-  if (user.tokens_remaining <= 0) {
-    return { ok: false, reason: 'tokens_agotados', user };
-  }
-  if (user.daily_calls_used >= DAILY_CALL_LIMIT) {
-    return { ok: false, reason: 'llamadas_diarias_agotadas', user };
-  }
+  if (user.tokens_remaining <= 0)              return { ok: false, reason: 'tokens_agotados',         user };
+  if (user.daily_calls_used >= DAILY_CALL_LIMIT) return { ok: false, reason: 'llamadas_diarias_agotadas', user };
 
   return { ok: true, reason: null, user };
 }
 
-function consumeTokens(userId, tokensUsed) {
-  const db = readDB();
-  const user = db.users.find((u) => u.id === userId);
-  if (!user) return;
-
+async function consumeTokens(userId, tokensUsed) {
   const hoy = new Date().toISOString().split('T')[0];
-  user.tokens_remaining = Math.max(0, user.tokens_remaining - (tokensUsed || 0));
-  user.daily_calls_used += 1;
-  user.last_call_date = hoy;
-  user.updated_at = new Date().toISOString();
-
-  writeDB(db);
+  await q(
+    `UPDATE users
+       SET tokens_remaining = GREATEST(0, tokens_remaining - ?),
+           daily_calls_used = daily_calls_used + 1,
+           last_call_date   = ?,
+           updated_at       = NOW()
+     WHERE id = ?`,
+    [tokensUsed || 0, hoy, userId]
+  );
 }
 
-// ── CHATS ────────────────────────────────────────────────────────────────
+// ── CHATS ─────────────────────────────────────────────────────────────────
 
-function createChat(userId, title, modelId) {
-  const db = readDB();
-  const newChat = {
-    id: getNextId(db.chats),
-    user_id: userId,
-    title: title || 'Nueva conversacion',
-    model_id: modelId || null,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  };
-  db.chats.push(newChat);
-  writeDB(db);
-  return newChat;
+async function createChat(userId, title, modelId) {
+  const safeTitle = (title || 'Nueva conversacion').slice(0, 255);
+  const { insertId } = await q(
+    'INSERT INTO chats (user_id, title, model_id) VALUES (?, ?, ?)',
+    [userId, safeTitle, modelId || null]
+  );
+  const { rows } = await q('SELECT * FROM chats WHERE id = ?', [insertId]);
+  return rows[0];
 }
 
-function getUserChats(userId) {
-  const db = readDB();
-  const userChats = db.chats
-    .filter((c) => c.user_id === userId)
-    .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
-
-  // Agregar el conteo de mensajes a cada chat
-  return userChats.map((chat) => {
-    const count = db.chat_messages.filter((m) => m.chat_id === chat.id).length;
-    return { ...chat, message_count: count };
-  });
+async function getUserChats(userId) {
+  const { rows } = await q(
+    `SELECT c.*,
+            COUNT(m.id) AS message_count
+       FROM chats c
+       LEFT JOIN chat_messages m ON m.chat_id = c.id
+      WHERE c.user_id = ?
+      GROUP BY c.id
+      ORDER BY c.updated_at DESC`,
+    [userId]
+  );
+  return rows;
 }
 
-function getChatWithMessages(chatId, userId) {
-  const db = readDB();
-  const chat = db.chats.find((c) => c.id === chatId && c.user_id === userId);
-  if (!chat) return null;
+async function getChatWithMessages(chatId, userId) {
+  const { rows: chatRows } = await q(
+    'SELECT * FROM chats WHERE id = ? AND user_id = ? LIMIT 1',
+    [chatId, userId]
+  );
+  if (!chatRows[0]) return null;
 
-  chat.messages = db.chat_messages
-    .filter((m) => m.chat_id === chatId)
-    .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-
+  const chat = chatRows[0];
+  const { rows: messages } = await q(
+    'SELECT * FROM chat_messages WHERE chat_id = ? ORDER BY created_at ASC',
+    [chatId]
+  );
+  chat.messages = messages;
   return chat;
 }
 
-function updateChatTitle(chatId, userId, title) {
-  const db = readDB();
-  const chat = db.chats.find((c) => c.id === chatId && c.user_id === userId);
-  if (chat) {
-    chat.title = title;
-    chat.updated_at = new Date().toISOString();
-    writeDB(db);
-  }
+async function updateChatTitle(chatId, userId, title) {
+  await q(
+    'UPDATE chats SET title = ?, updated_at = NOW() WHERE id = ? AND user_id = ?',
+    [title.slice(0, 255), chatId, userId]
+  );
 }
 
-function deleteChat(chatId, userId) {
-  const db = readDB();
-  const chatIndex = db.chats.findIndex((c) => c.id === chatId && c.user_id === userId);
-  if (chatIndex !== -1) {
-    db.chats.splice(chatIndex, 1);
-    // Eliminar también los mensajes asociados
-    db.chat_messages = db.chat_messages.filter((m) => m.chat_id !== chatId);
-    writeDB(db);
-    return true;
-  }
-  return false;
+async function deleteChat(chatId, userId) {
+  const { affectedRows } = await q(
+    'DELETE FROM chats WHERE id = ? AND user_id = ?',
+    [chatId, userId]
+  );
+  return affectedRows > 0;
 }
 
-// ── MENSAJES ─────────────────────────────────────────────────────────────
+// ── MENSAJES ──────────────────────────────────────────────────────────────
 
-function addMessage(chatId, role, content, tokensUsed = 0) {
-  const db = readDB();
-  const newMessage = {
-    id: getNextId(db.chat_messages),
-    chat_id: chatId,
-    role,
-    content,
-    tokens_used: tokensUsed,
-    created_at: new Date().toISOString()
-  };
-  db.chat_messages.push(newMessage);
+async function addMessage(chatId, role, content, tokensUsed = 0) {
+  const { insertId } = await q(
+    'INSERT INTO chat_messages (chat_id, role, content, tokens_used) VALUES (?, ?, ?, ?)',
+    [chatId, role, content, tokensUsed]
+  );
 
-  // Actualizar la fecha del chat
-  const chat = db.chats.find((c) => c.id === chatId);
-  if (chat) {
-    chat.updated_at = new Date().toISOString();
-  }
+  // Actualizar timestamp del chat padre
+  await q('UPDATE chats SET updated_at = NOW() WHERE id = ?', [chatId]);
 
-  writeDB(db);
-  return newMessage;
+  const { rows } = await q('SELECT * FROM chat_messages WHERE id = ?', [insertId]);
+  return rows[0];
 }
+
+// ── Exports ───────────────────────────────────────────────────────────────
 
 module.exports = {
+  initDB,
   createUser,
   getUserByEmail,
   getUserById,
@@ -230,9 +219,9 @@ module.exports = {
   createChat,
   getUserChats,
   getChatWithMessages,
-  addMessage,
   updateChatTitle,
   deleteChat,
+  addMessage,
   TOKEN_LIMIT,
   DAILY_CALL_LIMIT,
 };

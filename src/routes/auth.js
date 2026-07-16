@@ -24,7 +24,7 @@ function requireAuth(req, res, next) {
 router.post('/register', async (req, res, next) => {
   try {
     const { name, email, password } = req.body;
-    
+
     if (!name || !email || !password) {
       return res.status(400).json({ error: 'Todos los campos son obligatorios' });
     }
@@ -37,7 +37,7 @@ router.post('/register', async (req, res, next) => {
       return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
     }
 
-    const existingUser = db.getUserByEmail(email);
+    const existingUser = await db.getUserByEmail(email);
     if (existingUser) {
       return res.status(400).json({ error: 'El correo electrónico ya está registrado' });
     }
@@ -45,7 +45,7 @@ router.post('/register', async (req, res, next) => {
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
 
-    const newUser = db.createUser(email, passwordHash, name);
+    const newUser = await db.createUser(email, passwordHash, name);
 
     req.login(newUser, (err) => {
       if (err) return next(err);
@@ -63,8 +63,7 @@ router.post('/login', (req, res, next) => {
     if (!user) {
       return res.status(401).json({ error: info?.message || 'Acceso denegado' });
     }
-    
-    // Validación de gmail (por si algún usuario entró saltándose en versiones pasadas)
+
     if (!user.email.endsWith('@gmail.com')) {
       return res.status(401).json({ error: 'Solo se permiten cuentas de Gmail (@gmail.com)' });
     }
@@ -87,14 +86,14 @@ router.get('/logout', (req, res, next) => {
   });
 });
 
-// Retorna los datos del usuario actual
+// Datos del usuario actual
 router.get('/me', requireAuth, (req, res) => {
   const user = req.user;
   res.json({
     id: user.id,
     name: user.name,
     email: user.email,
-    avatar: null, // Ya no hay avatar de Google
+    avatar: null,
     tokens_remaining: user.tokens_remaining,
     daily_calls_used: user.daily_calls_used,
   });

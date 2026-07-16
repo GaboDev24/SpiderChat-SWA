@@ -94,9 +94,20 @@ app.use((req, res) => {
 
 // ── Inicio del servidor ───────────────────────────────────────────────────
 
-app.listen(PORT, () => {
-  console.log(`[SpiderChat] Servidor corriendo en http://localhost:${PORT}`);
-  console.log(`[SpiderChat] Entorno: ${process.env.NODE_ENV || 'development'}`);
-});
+const { initDB } = require('./db');
+
+(async () => {
+  try {
+    await initDB();
+  } catch (err) {
+    console.error('[DB] Error al inicializar tablas:', err.message);
+    process.exit(1);
+  }
+
+  app.listen(PORT, () => {
+    console.log(`[SpiderChat] Servidor corriendo en http://localhost:${PORT}`);
+    console.log(`[SpiderChat] Entorno: ${process.env.NODE_ENV || 'development'}`);
+  });
+})();
 
 module.exports = app;
