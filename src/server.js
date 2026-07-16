@@ -14,6 +14,10 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Confiar en el proxy de Vercel para que req.secure funcione correctamente
+// con cookies secure:true detrás de HTTPS
+app.set('trust proxy', 1);
+
 // Validar variables criticas al inicio
 if (!process.env.SESSION_SECRET) {
   console.warn('[Server] ADVERTENCIA: SESSION_SECRET no definida. Usando valor inseguro por defecto.');
