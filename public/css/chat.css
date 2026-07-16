@@ -130,7 +130,7 @@
   width: 100%;
   font-family: var(--font-mono);
   font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase;
-  background: var(--red); color: var(--off-white); border: none; cursor: pointer;
+  background: var(--red); color: #ffffff; border: none; cursor: pointer;
   padding: 0.7rem 1rem;
   clip-path: polygon(0 0, calc(100% - 7px) 0, 100% 7px, 100% 100%, 7px 100%, 0 calc(100% - 7px));
   transition: all 0.2s;
@@ -308,7 +308,7 @@
 /* Mensaje del usuario */
 .message.user .message-bubble {
   background: var(--red);
-  color: var(--off-white);
+  color: #ffffff;
   clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
   font-family: var(--font-body);
 }
@@ -412,7 +412,7 @@
   display: flex; align-items: center; justify-content: center;
   width: 48px; height: 48px; flex-shrink: 0;
   background: var(--red); border: none; cursor: pointer;
-  color: var(--off-white); font-size: 1rem;
+  color: #ffffff; font-size: 1rem;
   clip-path: polygon(0 0, calc(100% - 7px) 0, 100% 7px, 100% 100%, 7px 100%, 0 calc(100% - 7px));
   transition: all 0.2s;
 }

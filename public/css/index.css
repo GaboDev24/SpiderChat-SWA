@@ -1,4 +1,4 @@
-﻿/**
+/**
  * SpiderChat — Landing Page (index)
  * Misma paleta y tipografia que el resto de la app
  */
@@ -129,7 +129,7 @@
   flex-shrink: 0;
   width: 38px; height: 38px;
   background: var(--red); border: none; cursor: pointer;
-  color: var(--off-white); font-size: 0.95rem;
+  color: #ffffff; font-size: 0.95rem;
   display: flex; align-items: center; justify-content: center;
   clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px));
   transition: background 0.2s, box-shadow 0.2s;
@@ -181,7 +181,7 @@
   clip-path: polygon(0 0, calc(100% - 5px) 0, 100% 5px, 100% 100%, 5px 100%, 0 calc(100% - 5px));
 }
 .index-pill--primary {
-  background: var(--red); color: var(--off-white); border-color: var(--red);
+  background: var(--red); color: #ffffff; border-color: var(--red);
 }
 .index-pill--primary:hover { background: #c40000; box-shadow: 0 0 16px var(--red-glow); }
 .index-pill--ghost {
