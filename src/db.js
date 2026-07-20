@@ -132,13 +132,14 @@ async function checkUserLimits(userId) {
   if (lastCallStr instanceof Date) lastCallStr = lastCallStr.toISOString().split('T')[0];
   else if (typeof lastCallStr === 'string') lastCallStr = lastCallStr.split('T')[0];
 
-  // Resetear contador diario si cambió el día
+  // Resetear contador diario y tokens si cambió el día
   if (lastCallStr && lastCallStr !== hoy) {
     await q(
-      'UPDATE users SET daily_calls_used = 0, updated_at = NOW() WHERE id = ?',
-      [userId]
+      'UPDATE users SET daily_calls_used = 0, tokens_remaining = ?, updated_at = NOW() WHERE id = ?',
+      [TOKEN_LIMIT, userId]
     );
     user.daily_calls_used = 0;
+    user.tokens_remaining = TOKEN_LIMIT;
   }
 
   if (user.tokens_remaining <= 0)              return { ok: false, reason: 'tokens_agotados',         user };
