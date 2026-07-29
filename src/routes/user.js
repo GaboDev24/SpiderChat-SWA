@@ -16,25 +16,18 @@ router.use(requireAuth);
 // Estadisticas del usuario: tokens y llamadas diarias
 router.get('/stats', async (req, res, next) => {
   try {
-    // Refrescar datos desde la BD remota para tener valores actualizados
-    const user = await db.getUserById(req.user.id);
+    // Refrescar datos desde la BD remota y verificar reinicio diario de llamadas y tokens
+    const { user } = await db.checkUserLimits(req.user.id);
     if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
 
-    // Verificar si hay que reiniciar el contador diario
-    const hoy = new Date().toISOString().split('T')[0];
-    let llamadasHoy = user.daily_calls_used;
-    let lastCallStr = user.last_call_date;
-    if (lastCallStr instanceof Date) lastCallStr = lastCallStr.toISOString().split('T')[0];
-    else if (typeof lastCallStr === 'string') lastCallStr = lastCallStr.split('T')[0];
-
-    if (lastCallStr && lastCallStr !== hoy) {
-      llamadasHoy = 0;
-    }
+    const llamadasHoy = user.daily_calls_used;
+    const tokensRemaining = user.tokens_remaining;
+    const tokensUsed = Math.max(0, db.TOKEN_LIMIT - tokensRemaining);
 
     res.json({
-      tokens_remaining:       user.tokens_remaining,
+      tokens_remaining:       tokensRemaining,
       tokens_total:           db.TOKEN_LIMIT,
-      tokens_used:            db.TOKEN_LIMIT - user.tokens_remaining,
+      tokens_used:            tokensUsed,
       daily_calls_used:       llamadasHoy,
       daily_calls_limit:      db.DAILY_CALL_LIMIT,
       daily_calls_remaining:  Math.max(0, db.DAILY_CALL_LIMIT - llamadasHoy),

@@ -295,7 +295,7 @@ async function sendMessage(text) {
     // Actualizamos limites locales
     state.stats.tokens_remaining = data.tokens_remaining;
     state.stats.daily_calls_used = data.daily_calls_used;
-    state.stats.tokens_used += data.tokens_used;
+    state.stats.tokens_used = Math.max(0, state.stats.tokens_total - data.tokens_remaining);
     updateStatsUI();
     
   } catch (e) {
