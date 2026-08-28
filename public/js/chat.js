@@ -33,6 +33,15 @@ const UI = {
   statsCalls: document.getElementById('statsCalls'),
   statsTokensUsed: document.getElementById('statsTokensUsed'),
   tokenProgress: document.getElementById('tokenProgress'),
+  
+  // Profile modal elements
+  profileSettingsBtn: document.getElementById('profileSettingsBtn'),
+  profileModal: document.getElementById('profileModal'),
+  profileModalClose: document.getElementById('profileModalClose'),
+  profileForm: document.getElementById('profileForm'),
+  profileNameInput: document.getElementById('profileName'),
+  profileAvatarInput: document.getElementById('profileAvatar'),
+  profileAvatarFile: document.getElementById('profileAvatarFile'),
 };
 
 // Configurar marked para sanitizar un poco y soportar saltos de linea
@@ -103,7 +112,11 @@ async function fetchChats() {
 function updateUI() {
   if (state.user) {
     UI.userName.textContent = state.user.name;
-    UI.userAvatar.src = state.user.avatar || '/img/logo blanco.png';
+    let avatarUrl = state.user.avatar || '/img/logo blanco.png';
+    if (avatarUrl.startsWith('http://spiderwebargapi.com.ar')) {
+      avatarUrl = '/api/proxy/image?url=' + encodeURIComponent(avatarUrl);
+    }
+    UI.userAvatar.src = avatarUrl;
   }
 }
 
@@ -319,7 +332,11 @@ function appendMessage(role, content, dateStr = null) {
   av.className = `message-avatar ${role === 'assistant' ? 'assistant-av' : ''}`;
   
   if (role === 'user') {
-    av.innerHTML = `<img src="${state.user?.avatar || '/img/logo blanco.png'}" alt="U">`;
+    let avatarUrl = state.user?.avatar || '/img/logo blanco.png';
+    if (avatarUrl.startsWith('http://spiderwebargapi.com.ar')) {
+      avatarUrl = '/api/proxy/image?url=' + encodeURIComponent(avatarUrl);
+    }
+    av.innerHTML = `<img src="${avatarUrl}" alt="U">`;
   } else if (role === 'assistant') {
     av.innerHTML = '<i class="fa-solid fa-spider"></i>';
   } else {
@@ -462,6 +479,77 @@ function setupEventListeners() {
   UI.btnSidebarToggle.addEventListener('click', () => {
     UI.sidebar.classList.toggle('open');
   });
+
+  // Profile modal interactions
+  if (UI.profileSettingsBtn) {
+    UI.profileSettingsBtn.addEventListener('click', () => {
+      if (state.user) {
+        UI.profileNameInput.value = state.user.name || '';
+        UI.profileAvatarInput.value = state.user.avatar || '';
+      }
+      UI.profileModal.style.display = 'flex';
+    });
+  }
+
+  if (UI.profileModalClose) {
+    UI.profileModalClose.addEventListener('click', () => {
+      UI.profileModal.style.display = 'none';
+    });
+  }
+
+  if (UI.profileModal) {
+    UI.profileModal.addEventListener('click', (e) => {
+      if (e.target === UI.profileModal) {
+        UI.profileModal.style.display = 'none';
+      }
+    });
+  }
+
+  if (UI.profileForm) {
+    UI.profileForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = UI.profileNameInput.value.trim();
+      const avatarUrl = UI.profileAvatarInput.value.trim();
+      const avatarFile = UI.profileAvatarFile ? UI.profileAvatarFile.files[0] : null;
+      const btnSave = document.getElementById('btnSaveProfile');
+      
+      try {
+        btnSave.disabled = true;
+        btnSave.textContent = 'Guardando...';
+
+        const formData = new FormData();
+        formData.append('name', name);
+        if (avatarUrl) formData.append('avatar', avatarUrl);
+        if (avatarFile) formData.append('avatarFile', avatarFile);
+
+        const res = await fetch('/api/user/profile', {
+          method: 'PUT',
+          body: formData
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          state.user.name = name;
+          if (data.avatar) state.user.avatar = data.avatar;
+          else if (!avatarFile) state.user.avatar = avatarUrl;
+          
+          updateUI();
+          UI.profileModal.style.display = 'none';
+          
+          if (UI.profileAvatarFile) UI.profileAvatarFile.value = '';
+        } else {
+          const data = await res.json();
+          alert(data.error || 'Error al actualizar el perfil');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Error de conexión al actualizar el perfil.');
+      } finally {
+        btnSave.disabled = false;
+        btnSave.textContent = 'Guardar Cambios';
+      }
+    });
+  }
 }
 
 function autoResizeInput() {

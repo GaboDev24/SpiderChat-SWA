@@ -62,6 +62,24 @@ app.use('/auth', authRouter);
 app.use('/api/chat', chatRouter);
 app.use('/api/user', userRouter);
 
+// Proxy para imagenes (avatars)
+app.get('/api/proxy/image', async (req, res) => {
+  const imageUrl = req.query.url;
+  if (!imageUrl) return res.status(400).send('Missing url parameter');
+  
+  try {
+    const response = await fetch(imageUrl);
+    if (!response.ok) throw new Error('Failed to fetch image: ' + response.statusText);
+    
+    res.set('Content-Type', response.headers.get('content-type') || 'image/jpeg');
+    const buffer = await response.arrayBuffer();
+    res.send(Buffer.from(buffer));
+  } catch (error) {
+    console.error('[Proxy Error]', error.message);
+    res.status(500).send('Error proxying image');
+  }
+});
+
 // ── Paginas HTML ──────────────────────────────────────────────────────────
 
 const viewsDir = path.join(__dirname, '..', 'views');

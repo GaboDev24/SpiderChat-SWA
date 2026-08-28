@@ -505,3 +505,38 @@
 [data-theme="light"] .chat-input-area { background: rgba(244,244,244,0.95); }
 [data-theme="light"] .model-select { background: #f0f0f0; color: #121212; }
 [data-theme="light"] .model-select option { background: #ffffff; }
+
+/* ── Modal Perfil ─────────────────────────────────────────────────────── */
+
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 100;
+  background: rgba(0,0,0,0.7); backdrop-filter: blur(5px);
+  display: flex; align-items: center; justify-content: center;
+}
+
+.modal-content {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  width: 90%; max-width: 400px;
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+}
+
+.modal-header {
+  padding: 1rem 1.25rem; border-bottom: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.modal-header h3 { font-family: var(--font-head); margin: 0; color: var(--off-white); }
+.modal-close { background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; }
+.modal-close:hover { color: var(--red); }
+
+.modal-body { padding: 1.25rem; }
+
+.form-group { margin-bottom: 1rem; }
+.form-group label { display: block; font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 0.4rem; }
+.form-control { box-sizing: border-box; width: 100%; padding: 0.6rem; background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary); font-family: var(--font-body); }
+.form-control:focus { border-color: var(--red); outline: none; }
+
+.form-actions { display: flex; justify-content: flex-end; margin-top: 1.5rem; }
+.btn-primary { background: var(--red); color: white; border: none; padding: 0.6rem 1.2rem; cursor: pointer; font-family: var(--font-mono); font-size: 0.8rem; text-transform: uppercase; clip-path: polygon(0 0, calc(100% - 7px) 0, 100% 7px, 100% 100%, 7px 100%, 0 calc(100% - 7px)); transition: all 0.2s; }
+.btn-primary:hover { background: #c40000; box-shadow: 0 0 10px var(--red-glow); }
+

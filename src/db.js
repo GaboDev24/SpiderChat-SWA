@@ -48,6 +48,7 @@ async function initDB() {
         email            VARCHAR(255) UNIQUE NOT NULL,
         password_hash    VARCHAR(255) NOT NULL,
         name             VARCHAR(255) NOT NULL,
+        avatar           VARCHAR(255) DEFAULT NULL,
         tokens_remaining INT     NOT NULL DEFAULT ${TOKEN_LIMIT},
         daily_calls_used INT     NOT NULL DEFAULT 0,
         last_call_date   DATE             DEFAULT NULL,
@@ -99,6 +100,12 @@ async function initDB() {
     }
   }
 
+  try {
+    await q('ALTER TABLE users ADD COLUMN avatar VARCHAR(255) DEFAULT NULL');
+  } catch (err) {
+    // Ignorar si la columna ya existe
+  }
+
   console.log(`[DB] Todas las tablas verificadas en "${DB}"`);
 }
 
@@ -120,6 +127,14 @@ async function getUserByEmail(email) {
 async function getUserById(userId) {
   const { rows } = await q('SELECT * FROM users WHERE id = ? LIMIT 1', [userId]);
   return rows[0] || null;
+}
+
+async function updateUserProfile(userId, name, avatar) {
+  const { affectedRows } = await q(
+    'UPDATE users SET name = ?, avatar = ?, updated_at = NOW() WHERE id = ?',
+    [name, avatar || null, userId]
+  );
+  return affectedRows > 0;
 }
 
 async function checkUserLimits(userId) {
@@ -240,6 +255,7 @@ module.exports = {
   createUser,
   getUserByEmail,
   getUserById,
+  updateUserProfile,
   checkUserLimits,
   consumeTokens,
   createChat,

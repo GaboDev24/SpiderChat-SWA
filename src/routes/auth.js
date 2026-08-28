@@ -93,7 +93,7 @@ router.get('/me', requireAuth, (req, res) => {
     id: user.id,
     name: user.name,
     email: user.email,
-    avatar: null,
+    avatar: user.avatar,
     tokens_remaining: user.tokens_remaining,
     daily_calls_used: user.daily_calls_used,
   });

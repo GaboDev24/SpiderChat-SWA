@@ -49,6 +49,9 @@
         <img src="" alt="Avatar" class="user-avatar" id="userAvatar">
         <span class="user-name" id="userName">Cargando...</span>
         
+        <button class="header-btn" id="profileSettingsBtn" title="Configuración de Perfil">
+          <i class="fa-solid fa-gear"></i>
+        </button>
         <button class="header-btn" id="theme-toggle-btn" title="Tema">
           <!-- Icono se llena por theme.js -->
         </button>
@@ -130,6 +133,32 @@
       </div>
     </main>
 
+  </div>
+
+  <!-- Modal Perfil -->
+  <div id="profileModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Configuración de Perfil</h3>
+        <button class="modal-close" id="profileModalClose">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="profileForm">
+          <div class="form-group">
+            <label for="profileName">Nombre</label>
+            <input type="text" id="profileName" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label for="profileAvatar">Avatar (URL o Archivo)</label>
+            <input type="text" id="profileAvatar" class="form-control" placeholder="URL de la imagen...">
+            <input type="file" id="profileAvatarFile" class="form-control" accept="image/*" style="margin-top: 0.5rem; padding: 0.4rem;">
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn-primary" id="btnSaveProfile">Guardar Cambios</button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 
   <script src="/js/chat.js"></script>
