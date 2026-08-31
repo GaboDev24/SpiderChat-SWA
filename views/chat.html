@@ -13,6 +13,9 @@
   <!-- FontAwesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   
+  <!-- DOMPurify para sanitizar HTML -->
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.9/dist/purify.min.js"></script>
+  
   <!-- Marked.js para parsear markdown -->
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
@@ -113,8 +116,19 @@
       <!-- Input de chat -->
       <div class="chat-input-area">
         <div id="limitMessage" class="limit-message" style="display: none;"></div>
+        <!-- Previsualización de adjunto -->
+        <div id="attachmentPreview" class="attachment-preview" style="display: none;">
+          <i class="fa-solid fa-file" id="attachmentIcon"></i>
+          <span id="attachmentName">archivo.pdf</span>
+          <button type="button" id="btnRemoveAttachment" title="Quitar archivo"><i class="fa-solid fa-xmark"></i></button>
+        </div>
         
         <form class="input-row" id="chatForm">
+          <button type="button" class="attach-btn" id="btnAttach" title="Adjuntar PDF o Audio">
+            <i class="fa-solid fa-paperclip"></i>
+          </button>
+          <input type="file" id="fileAttachment" accept=".pdf,audio/*" style="display: none;">
+          
           <textarea 
             class="chat-textarea" 
             id="chatInput" 

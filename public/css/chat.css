@@ -540,3 +540,25 @@
 .btn-primary { background: var(--red); color: white; border: none; padding: 0.6rem 1.2rem; cursor: pointer; font-family: var(--font-mono); font-size: 0.8rem; text-transform: uppercase; clip-path: polygon(0 0, calc(100% - 7px) 0, 100% 7px, 100% 100%, 7px 100%, 0 calc(100% - 7px)); transition: all 0.2s; }
 .btn-primary:hover { background: #c40000; box-shadow: 0 0 10px var(--red-glow); }
 
+/* ── Adjuntos ────────────────────────────────────────────────────────── */
+
+.attach-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 48px; height: 48px; flex-shrink: 0;
+  background: var(--bg-card); border: 1px solid var(--border); cursor: pointer;
+  color: var(--text-secondary); font-size: 1.1rem;
+  clip-path: polygon(0 0, calc(100% - 7px) 0, 100% 7px, 100% 100%, 7px 100%, 0 calc(100% - 7px));
+  transition: all 0.2s;
+}
+.attach-btn:hover { color: var(--off-white); border-color: var(--red); }
+
+.attachment-preview {
+  display: flex; align-items: center; gap: 0.5rem;
+  background: rgba(163,0,0,0.1); border: 1px solid var(--border);
+  padding: 0.4rem 0.8rem; margin-bottom: 0.5rem; width: max-content; max-width: 100%;
+  clip-path: polygon(0 0, calc(100% - 5px) 0, 100% 5px, 100% 100%, 5px 100%, 0 calc(100% - 5px));
+}
+.attachment-preview i { color: var(--red); }
+.attachment-preview span { font-family: var(--font-mono); font-size: 0.7rem; color: var(--off-white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+.attachment-preview button { background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.8rem; padding: 0.2rem; }
+.attachment-preview button:hover { color: var(--red); }

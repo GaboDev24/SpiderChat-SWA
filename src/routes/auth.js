@@ -23,11 +23,21 @@ function requireAuth(req, res, next) {
 // Registro
 router.post('/register', async (req, res, next) => {
   try {
-    const { name, email, password } = req.body;
+    let { name, email, password } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({ error: 'Todos los campos son obligatorios' });
     }
+    
+    if (typeof name !== 'string' || typeof email !== 'string' || typeof password !== 'string') {
+      return res.status(400).json({ error: 'Formato inválido' });
+    }
+    
+    if (name.length > 100 || email.length > 255 || password.length > 100) {
+      return res.status(400).json({ error: 'Longitud de campo excedida' });
+    }
+    
+    email = email.toLowerCase();
 
     if (!email.endsWith('@gmail.com')) {
       return res.status(400).json({ error: 'Solo se permiten cuentas de Gmail (@gmail.com)' });
@@ -58,6 +68,9 @@ router.post('/register', async (req, res, next) => {
 
 // Login
 router.post('/login', (req, res, next) => {
+  if (req.body.email && typeof req.body.email === 'string') {
+    req.body.email = req.body.email.toLowerCase();
+  }
   passport.authenticate('local', (err, user, info) => {
     if (err) return next(err);
     if (!user) {

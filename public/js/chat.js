@@ -25,6 +25,14 @@ const UI = {
   btnSidebarToggle: document.getElementById('btnSidebarToggle'),
   sidebar: document.getElementById('sidebar'),
   
+  // Attachments
+  btnAttach: document.getElementById('btnAttach'),
+  fileAttachment: document.getElementById('fileAttachment'),
+  attachmentPreview: document.getElementById('attachmentPreview'),
+  attachmentName: document.getElementById('attachmentName'),
+  btnRemoveAttachment: document.getElementById('btnRemoveAttachment'),
+  attachmentIcon: document.getElementById('attachmentIcon'),
+  
   // User info elements
   userName: document.getElementById('userName'),
   userAvatar: document.getElementById('userAvatar'),
@@ -276,16 +284,36 @@ async function sendMessage(text) {
   const idTyping = showTypingIndicator();
   scrollToBottom();
   
+  const hasFile = UI.fileAttachment && UI.fileAttachment.files.length > 0;
+  let body, headers;
+  
+  if (hasFile) {
+    body = new FormData();
+    body.append('message', text);
+    body.append('model_id', modelId);
+    if (state.currentChatId) body.append('chat_id', state.currentChatId);
+    body.append('file', UI.fileAttachment.files[0]);
+    headers = {}; // El navegador establece Content-Type automáticamente con boundary
+  } else {
+    body = JSON.stringify({
+      message: text,
+      model_id: modelId,
+      chat_id: state.currentChatId
+    });
+    headers = { 'Content-Type': 'application/json' };
+  }
+  
   try {
     const res = await fetch('/api/chat/send', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        message: text,
-        model_id: modelId,
-        chat_id: state.currentChatId
-      })
+      headers,
+      body
     });
+    
+    if (hasFile) {
+      UI.fileAttachment.value = '';
+      UI.attachmentPreview.style.display = 'none';
+    }
     
     const data = await res.json();
     removeTypingIndicator(idTyping);
@@ -348,7 +376,7 @@ function appendMessage(role, content, dateStr = null) {
   
   // Markdown para IA, texto plano para usuario/sistema
   if (role === 'assistant') {
-    bubble.innerHTML = marked.parse(content);
+    bubble.innerHTML = DOMPurify.sanitize(marked.parse(content));
   } else {
     bubble.textContent = content;
   }
@@ -395,14 +423,14 @@ async function typewriterMessage(content) {
     wordCount++;
 
     // Re-renderizar markdown y hacer scroll cada 2 tokens
-    bubble.innerHTML = marked.parse(current);
+    bubble.innerHTML = DOMPurify.sanitize(marked.parse(current));
     if (wordCount % 2 === 0) scrollToBottom();
 
     await new Promise(r => setTimeout(r, DELAY_MS));
   }
 
   // Asegurarse de render final completo y agregar timestamp
-  bubble.innerHTML = marked.parse(content);
+  bubble.innerHTML = DOMPurify.sanitize(marked.parse(content));
 
   const time = document.createElement('div');
   time.className = 'message-time';
@@ -479,6 +507,35 @@ function setupEventListeners() {
   UI.btnSidebarToggle.addEventListener('click', () => {
     UI.sidebar.classList.toggle('open');
   });
+
+  // Attachments
+  if (UI.btnAttach) {
+    UI.btnAttach.addEventListener('click', () => UI.fileAttachment.click());
+  }
+  
+  if (UI.fileAttachment) {
+    UI.fileAttachment.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        UI.attachmentName.textContent = file.name;
+        UI.attachmentPreview.style.display = 'flex';
+        if (file.type.includes('audio')) {
+          UI.attachmentIcon.className = 'fa-solid fa-file-audio';
+        } else {
+          UI.attachmentIcon.className = 'fa-solid fa-file-pdf';
+        }
+      } else {
+        UI.attachmentPreview.style.display = 'none';
+      }
+    });
+  }
+
+  if (UI.btnRemoveAttachment) {
+    UI.btnRemoveAttachment.addEventListener('click', () => {
+      UI.fileAttachment.value = '';
+      UI.attachmentPreview.style.display = 'none';
+    });
+  }
 
   // Profile modal interactions
   if (UI.profileSettingsBtn) {

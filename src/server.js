@@ -68,6 +68,11 @@ app.get('/api/proxy/image', async (req, res) => {
   if (!imageUrl) return res.status(400).send('Missing url parameter');
   
   try {
+    const parsedUrl = new URL(imageUrl);
+    if (!parsedUrl.hostname.endsWith('spiderwebargapi.com.ar')) {
+      return res.status(403).send('Domain not allowed');
+    }
+    
     const response = await fetch(imageUrl);
     if (!response.ok) throw new Error('Failed to fetch image: ' + response.statusText);
     

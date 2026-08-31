@@ -28,15 +28,16 @@ async function sqlQuery(sqlStr, params = []) {
 class SqlSessionStore extends Store {
   constructor(options = {}) {
     super(options);
-    // Limpieza automática de sesiones expiradas cada 15 minutos
-    this._cleanupInterval = setInterval(() => this._cleanup(), 15 * 60 * 1000);
-    if (this._cleanupInterval.unref) this._cleanupInterval.unref();
+    // En entornos serverless, setInterval no es confiable. Se usará limpieza probabilística en get().
   }
 
   /**
    * Obtiene una sesión por ID.
    */
   get(sid, callback) {
+    // 5% de probabilidad de limpiar sesiones expiradas
+    if (Math.random() < 0.05) this._cleanup();
+
     sqlQuery(
       'SELECT data FROM sessions WHERE sid = ? AND expires > NOW() LIMIT 1',
       [sid]

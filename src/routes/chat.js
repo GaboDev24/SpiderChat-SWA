@@ -16,6 +16,11 @@ const router = express.Router();
 const db = require('../db');
 const { ia, ApiError } = require('../../api-client');
 const { requireAuth } = require('./auth');
+const multer = require('multer');
+const pdfParse = require('pdf-parse');
+const FormData = require('form-data');
+
+const upload = multer({ storage: multer.memoryStorage() });
 
 // Todos los endpoints de chat requieren autenticacion
 router.use(requireAuth);
@@ -95,9 +100,9 @@ router.delete('/:id', async (req, res, next) => {
 
 // ── Enviar mensaje ────────────────────────────────────────────────────────
 
-router.post('/send', async (req, res, next) => {
+router.post('/send', upload.single('file'), async (req, res, next) => {
   try {
-    const { message, model_id, chat_id } = req.body;
+    let { message, model_id, chat_id } = req.body;
 
     // Validaciones basicas
     if (!message || typeof message !== 'string' || message.trim().length === 0) {
@@ -105,6 +110,53 @@ router.post('/send', async (req, res, next) => {
     }
     if (!model_id) {
       return res.status(400).json({ error: 'El campo "model_id" es obligatorio.' });
+    }
+    
+    let finalMessage = message.trim();
+
+    // Procesar archivo adjunto si existe
+    if (req.file) {
+      const mimeType = req.file.mimetype;
+      if (mimeType === 'application/pdf') {
+        try {
+          const pdfData = await pdfParse(req.file.buffer);
+          finalMessage = `Contexto del documento adjunto:\n\n${pdfData.text}\n\nPregunta: ${finalMessage}`;
+        } catch (e) {
+          return res.status(400).json({ error: 'No se pudo extraer el texto del PDF.' });
+        }
+      } else if (mimeType.startsWith('audio/')) {
+        try {
+          if (!process.env.OPENAI_API_KEY) {
+            return res.status(500).json({ error: 'Transcipción de audio requiere configurar OPENAI_API_KEY en .env' });
+          }
+          
+          const form = new FormData();
+          form.append('file', req.file.buffer, { filename: req.file.originalname || 'audio.mp3', contentType: mimeType });
+          form.append('model', 'whisper-1');
+          
+          const { default: fetch } = await import('node-fetch');
+          const sttRes = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+              ...form.getHeaders()
+            },
+            body: form
+          });
+          
+          if (!sttRes.ok) {
+            throw new Error(await sttRes.text());
+          }
+          
+          const sttData = await sttRes.json();
+          finalMessage = `Transcripción del audio enviado:\n\n${sttData.text}\n\nInstrucción del usuario: ${finalMessage}`;
+        } catch (e) {
+          console.error('Error Whisper:', e);
+          return res.status(502).json({ error: 'Fallo al transcribir el audio usando Whisper API.' });
+        }
+      } else {
+        return res.status(400).json({ error: 'Formato de archivo no soportado. Solo PDF y Audio.' });
+      }
     }
 
     // Verificar limites del usuario
@@ -129,12 +181,12 @@ router.post('/send', async (req, res, next) => {
     }
 
     // Guardar el mensaje del usuario
-    await db.addMessage(chat.id, 'user', message.trim(), 0);
+    await db.addMessage(chat.id, 'user', finalMessage, 0);
 
     // Construir historial completo para enviar a la IA
     const historial = [
       ...chat.messages,
-      { role: 'user', content: message.trim() },
+      { role: 'user', content: finalMessage },
     ].map(m => ({ role: m.role, content: m.content }));
 
     // Llamar a SpiderIA
@@ -142,6 +194,9 @@ router.post('/send', async (req, res, next) => {
     try {
       respuestaIA = await ia.chat(model_id, historial);
     } catch (iaErr) {
+      const errorMsg = iaErr instanceof ApiError ? `Error al comunicarse con la IA: ${iaErr.message}` : 'Error interno al procesar tu solicitud.';
+      await db.addMessage(chat.id, 'assistant', errorMsg, 0);
+      
       if (iaErr instanceof ApiError) {
         return res.status(502).json({
           error: 'Error al comunicarse con SpiderIA',
