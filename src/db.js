@@ -88,6 +88,16 @@ async function initDB() {
         expires DATETIME     NOT NULL
       )`,
     },
+    {
+      name: 'document_chunks',
+      sql: `CREATE TABLE IF NOT EXISTS document_chunks (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        chat_id INT NOT NULL,
+        chunk_text TEXT NOT NULL,
+        embedding TEXT NOT NULL,
+        FOREIGN KEY (chat_id) REFERENCES chats(id) ON DELETE CASCADE
+      )`,
+    },
   ];
 
   for (const table of tables) {
@@ -248,6 +258,39 @@ async function addMessage(chatId, role, content, tokensUsed = 0) {
   return rows[0];
 }
 
+// ── RAG / DOCUMENTOS ──────────────────────────────────────────────────────
+
+async function saveChunks(chatId, chunks) {
+  if (!chunks || chunks.length === 0) return;
+  
+  // Inserción en lote (batch) para no saturar la API remota
+  const values = [];
+  const placeholders = [];
+  for (const chunk of chunks) {
+    placeholders.push('(?, ?, ?)');
+    values.push(chatId, chunk.text, JSON.stringify(chunk.embedding));
+  }
+  const sqlStr = `INSERT INTO document_chunks (chat_id, chunk_text, embedding) VALUES ${placeholders.join(', ')}`;
+  await q(sqlStr, values);
+}
+
+async function getChunksByChat(chatId) {
+  const { rows } = await q(
+    'SELECT chunk_text, embedding FROM document_chunks WHERE chat_id = ?',
+    [chatId]
+  );
+  return rows.map(r => {
+    let emb = [];
+    try {
+      emb = JSON.parse(r.embedding);
+    } catch(e) {}
+    return {
+      text: r.chunk_text,
+      embedding: emb
+    };
+  });
+}
+
 // ── Exports ───────────────────────────────────────────────────────────────
 
 module.exports = {
@@ -264,6 +307,8 @@ module.exports = {
   updateChatTitle,
   deleteChat,
   addMessage,
+  saveChunks,
+  getChunksByChat,
   TOKEN_LIMIT,
   DAILY_CALL_LIMIT,
 };

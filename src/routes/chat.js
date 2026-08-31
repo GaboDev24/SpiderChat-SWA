@@ -19,6 +19,8 @@ const { requireAuth } = require('./auth');
 const multer = require('multer');
 const pdfParse = require('pdf-parse');
 const FormData = require('form-data');
+const fs = require('fs').promises;
+const path = require('path');
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -112,6 +114,17 @@ router.post('/send', upload.single('file'), async (req, res, next) => {
       return res.status(400).json({ error: 'El campo "model_id" es obligatorio.' });
     }
     
+    // Obtener o crear el chat
+    let chat;
+    if (chat_id) {
+      chat = await db.getChatWithMessages(parseInt(chat_id, 10), req.user.id);
+      if (!chat) return res.status(404).json({ error: 'Chat no encontrado' });
+    } else {
+      const titulo = message.trim().slice(0, 50) + (message.trim().length > 50 ? '...' : '');
+      chat = await db.createChat(req.user.id, titulo, model_id);
+      chat.messages = [];
+    }
+
     let finalMessage = message.trim();
 
     // Procesar archivo adjunto si existe
@@ -122,7 +135,8 @@ router.post('/send', upload.single('file'), async (req, res, next) => {
           const pdfData = await pdfParse(req.file.buffer);
           finalMessage = `Contexto del documento adjunto:\n\n${pdfData.text}\n\nPregunta: ${finalMessage}`;
         } catch (e) {
-          return res.status(400).json({ error: 'No se pudo extraer el texto del PDF.' });
+          console.error(e);
+          return res.status(400).json({ error: `No se pudo procesar el PDF: ${e.message}` });
         }
       } else if (mimeType.startsWith('audio/')) {
         try {
@@ -169,21 +183,10 @@ router.post('/send', upload.single('file'), async (req, res, next) => {
       return res.status(429).json({ error: mensajes[reason] || 'Limite alcanzado', reason });
     }
 
-    // Obtener o crear el chat
-    let chat;
-    if (chat_id) {
-      chat = await db.getChatWithMessages(parseInt(chat_id, 10), req.user.id);
-      if (!chat) return res.status(404).json({ error: 'Chat no encontrado' });
-    } else {
-      const titulo = message.trim().slice(0, 50) + (message.trim().length > 50 ? '...' : '');
-      chat = await db.createChat(req.user.id, titulo, model_id);
-      chat.messages = [];
-    }
+    // Guardar el mensaje original (limpio) del usuario en la Base de Datos para el historial visual
+    await db.addMessage(chat.id, 'user', message.trim(), 0);
 
-    // Guardar el mensaje del usuario
-    await db.addMessage(chat.id, 'user', finalMessage, 0);
-
-    // Construir historial completo para enviar a la IA
+    // Construir historial completo para enviar a la IA (inyectando el texto del PDF si existe)
     const historial = [
       ...chat.messages,
       { role: 'user', content: finalMessage },
@@ -193,7 +196,32 @@ router.post('/send', upload.single('file'), async (req, res, next) => {
     let respuestaIA;
     try {
       respuestaIA = await ia.chat(model_id, historial);
+      
+      // LOG DE DEPURACIÓN (ÉXITO)
+      const logEntry = {
+        timestamp: new Date().toISOString(),
+        chat_id: chat.id,
+        user_id: req.user.id,
+        model: model_id,
+        messages: historial,
+        raw_response: respuestaIA,
+        error: null
+      };
+      await fs.appendFile(path.join(__dirname, '../../data/chat_debug.log'), JSON.stringify(logEntry) + '\n').catch(() => {});
+      
     } catch (iaErr) {
+      // LOG DE DEPURACIÓN (ERROR)
+      const logEntry = {
+        timestamp: new Date().toISOString(),
+        chat_id: chat.id,
+        user_id: req.user.id,
+        model: model_id,
+        messages: historial,
+        raw_response: null,
+        error: iaErr.message || String(iaErr)
+      };
+      await fs.appendFile(path.join(__dirname, '../../data/chat_debug.log'), JSON.stringify(logEntry) + '\n').catch(() => {});
+
       const errorMsg = iaErr instanceof ApiError ? `Error al comunicarse con la IA: ${iaErr.message}` : 'Error interno al procesar tu solicitud.';
       await db.addMessage(chat.id, 'assistant', errorMsg, 0);
       
