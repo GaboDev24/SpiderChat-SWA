@@ -1,5 +1,4 @@
 'use strict';
-require('dotenv').config();
 
 // 1. Fragmentación de texto (Chunking simple)
 function chunkText(text, maxChars = 1000) {
@@ -20,66 +19,45 @@ function chunkText(text, maxChars = 1000) {
   return chunks;
 }
 
-// 2. OpenAI Embeddings con Lotes (Batches) para archivos grandes
-async function getEmbeddings(texts) {
-  if (!process.env.OPENAI_API_KEY) throw new Error('OPENAI_API_KEY no definida');
-  const { default: fetch } = await import('node-fetch');
+// 2. Extracción de palabras para búsqueda local
+function getWords(text) {
+  // Extrae palabras alfanuméricas, ignorando tildes de forma básica
+  return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").match(/\w+/g) || [];
+}
+
+// 3. Puntuación de similitud (Frecuencia de términos básica)
+function calculateScore(query, chunk) {
+  const queryWords = new Set(getWords(query));
+  const chunkWords = getWords(chunk);
   
-  const allEmbeddings = [];
-  const BATCH_SIZE = 50; // Agrupamos de a 50 párrafos para no estallar el rate limit de tokens
-  
-  for (let i = 0; i < texts.length; i += BATCH_SIZE) {
-    const batch = texts.slice(i, i + BATCH_SIZE);
-    const res = await fetch('https://api.openai.com/v1/embeddings', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
-      },
-      body: JSON.stringify({
-        input: batch,
-        model: 'text-embedding-3-small'
-      })
-    });
-    
-    if (!res.ok) {
-      const errText = await res.text();
-      throw new Error(`OpenAI Error: ${errText}`);
+  let score = 0;
+  for (const word of chunkWords) {
+    // Si la palabra de la consulta está en el chunk, sumamos puntos
+    if (queryWords.has(word) && word.length > 3) { // ignorar conectores cortos
+      score += 1; 
     }
-    const data = await res.json();
-    const batchEmbeddings = data.data.map(d => d.embedding);
-    allEmbeddings.push(...batchEmbeddings);
   }
   
-  return allEmbeddings;
+  // Normalizar la puntuación por la longitud del chunk para no favorecer chunks gigantes
+  return score / (chunkWords.length + 1);
 }
 
-// 3. Similitud de Coseno
-function cosineSimilarity(vecA, vecB) {
-  let dotProduct = 0;
-  let normA = 0;
-  let normB = 0;
-  for (let i = 0; i < vecA.length; i++) {
-    dotProduct += vecA[i] * vecB[i];
-    normA += vecA[i] * vecA[i];
-    normB += vecB[i] * vecB[i];
-  }
-  if (normA === 0 || normB === 0) return 0;
-  return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
-}
-
-// 4. Búsqueda de Chunks (Top K)
+// 4. Búsqueda de Chunks Locales (Top K) sin API Externa
 async function findTopKChunks(queryText, allChunks, k = 3) {
   if (allChunks.length === 0) return [];
-  const queryEmbedding = (await getEmbeddings([queryText]))[0];
   
-  const scoredChunks = allChunks.map(chunk => ({
-    text: chunk.text,
-    score: cosineSimilarity(queryEmbedding, chunk.embedding)
-  }));
+  const scoredChunks = allChunks.map(chunk => {
+    // Soportar tanto objetos {text: '...'} como strings
+    const text = typeof chunk === 'string' ? chunk : chunk.text;
+    return {
+      text,
+      score: calculateScore(queryText, text)
+    };
+  });
   
+  // Ordenar de mayor a menor puntuación
   scoredChunks.sort((a, b) => b.score - a.score);
   return scoredChunks.slice(0, k).map(c => c.text);
 }
 
-module.exports = { chunkText, getEmbeddings, findTopKChunks };
+module.exports = { chunkText, findTopKChunks };

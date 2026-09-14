@@ -17,12 +17,15 @@ const db = require('../db');
 const { ia, ApiError } = require('../../api-client');
 const { requireAuth } = require('./auth');
 const multer = require('multer');
-const pdfParse = require('pdf-parse');
-const FormData = require('form-data');
+const { processFileBuffer } = require('../services/ocrService');
+const { processAudioBuffer } = require('../services/audioService');
+const { chunkText, findTopKChunks } = require('../rag');
+const { saveChunksLocal, getChunksLocal } = require('../rag-cache');
 const fs = require('fs').promises;
 const path = require('path');
+const os = require('os');
 
-const upload = multer({ storage: multer.memoryStorage() });
+const upload = multer({ dest: os.tmpdir() }); // Almacenamiento temporal en disco
 
 // Todos los endpoints de chat requieren autenticacion
 router.use(requireAuth);
@@ -130,46 +133,69 @@ router.post('/send', upload.single('file'), async (req, res, next) => {
     // Procesar archivo adjunto si existe
     if (req.file) {
       const mimeType = req.file.mimetype;
-      if (mimeType === 'application/pdf') {
+      let extractedText = '';
+
+      if (mimeType === 'application/pdf' || mimeType.startsWith('image/')) {
         try {
-          const pdfData = await pdfParse(req.file.buffer);
-          finalMessage = `Contexto del documento adjunto:\n\n${pdfData.text}\n\nPregunta: ${finalMessage}`;
+          extractedText = await processFileBuffer(req.file.path, mimeType);
         } catch (e) {
-          console.error(e);
-          return res.status(400).json({ error: `No se pudo procesar el PDF: ${e.message}` });
+          await fs.unlink(req.file.path).catch(() => {});
+          return res.status(400).json({ error: e.message });
         }
       } else if (mimeType.startsWith('audio/')) {
         try {
-          if (!process.env.OPENAI_API_KEY) {
-            return res.status(500).json({ error: 'Transcipción de audio requiere configurar OPENAI_API_KEY en .env' });
-          }
-          
-          const form = new FormData();
-          form.append('file', req.file.buffer, { filename: req.file.originalname || 'audio.mp3', contentType: mimeType });
-          form.append('model', 'whisper-1');
-          
-          const { default: fetch } = await import('node-fetch');
-          const sttRes = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-              ...form.getHeaders()
-            },
-            body: form
-          });
-          
-          if (!sttRes.ok) {
-            throw new Error(await sttRes.text());
-          }
-          
-          const sttData = await sttRes.json();
-          finalMessage = `Transcripción del audio enviado:\n\n${sttData.text}\n\nInstrucción del usuario: ${finalMessage}`;
+          extractedText = await processAudioBuffer(req.file);
         } catch (e) {
-          console.error('Error Whisper:', e);
-          return res.status(502).json({ error: 'Fallo al transcribir el audio usando Whisper API.' });
+          await fs.unlink(req.file.path).catch(() => {});
+          return res.status(502).json({ error: e.message });
         }
       } else {
-        return res.status(400).json({ error: 'Formato de archivo no soportado. Solo PDF y Audio.' });
+        await fs.unlink(req.file.path).catch(() => {});
+        return res.status(400).json({ error: 'Formato de archivo no soportado. Se admiten PDF, imágenes y audio.' });
+      }
+
+      // Eliminar archivo temporal tras el procesamiento exitoso
+      await fs.unlink(req.file.path).catch(() => {});
+
+      // Sistema RAG para textos largos
+      if (extractedText.length > 2000) {
+        try {
+          // Dividir el documento
+          const chunks = chunkText(extractedText, 1000); // Fragmentos de ~1000 chars
+          
+          const chunkData = chunks.map(text => ({ text }));
+          
+          // Guardar en cache local asociado al chat
+          await saveChunksLocal(chat.id, chunkData);
+
+          // Buscar contexto relevante para responder la pregunta actual
+          const topChunks = await findTopKChunks(finalMessage, chunkData, 3);
+          const contextoRelevante = topChunks.join('\n\n...\n\n');
+          
+          finalMessage = `Contexto relevante extraído del documento:\n\n${contextoRelevante}\n\nPregunta: ${finalMessage}`;
+        } catch (e) {
+          console.error('[RAG Error]', e);
+          // Fallback a enviar texto truncado si falla el RAG
+          finalMessage = `Contexto del documento:\n\n${extractedText.substring(0, 2000)}...\n\nPregunta: ${finalMessage}`;
+        }
+      } else {
+        // Texto corto: inyectarlo completo
+        finalMessage = `Contexto del documento:\n\n${extractedText}\n\nPregunta: ${finalMessage}`;
+      }
+    } else {
+      // Si NO hay archivo nuevo en este request, verificamos si el chat ya tiene historial de RAG (cache)
+      // para inyectar contexto a las nuevas preguntas sin necesidad de resubir el archivo.
+      try {
+        const cachedChunks = await getChunksLocal(chat.id);
+        if (cachedChunks && cachedChunks.length > 0) {
+          const topChunks = await findTopKChunks(finalMessage, cachedChunks, 3);
+          if (topChunks.length > 0) {
+            const contextoRelevante = topChunks.join('\n\n...\n\n');
+            finalMessage = `[Información de referencia del documento previamente subido]\n\n${contextoRelevante}\n\nPregunta actual: ${finalMessage}`;
+          }
+        }
+      } catch (e) {
+        console.error('[RAG Cache Query Error]', e);
       }
     }
 
